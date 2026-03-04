@@ -2,7 +2,10 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { getAllRegistryModels, type ModelRegistryEntry } from '@/lib/model-registry'
+import {
+  getAllRegistryModels,
+  type ModelRegistryEntry,
+} from '@/lib/model-registry'
 
 function formatTokenCount(tokens: number): string {
   if (tokens >= 1_000_000) {
@@ -36,9 +39,7 @@ export function ModelsPane() {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-medium">
-          {t('preferences.models.title')}
-        </h3>
+        <h3 className="text-lg font-medium">{t('preferences.models.title')}</h3>
         <p className="text-sm text-muted-foreground">
           {t('preferences.models.description')}
         </p>

@@ -21,10 +21,10 @@ DroidGear supports customizing configuration directory paths for Droid/Factory, 
 3. 点击 📁 图标浏览选择目录，或直接输入路径
 4. 点击 **Save** 保存
 
-1. Open **Preferences** (Mac: `Cmd+,` / Windows: `Ctrl+,`)
-2. Select the **Paths** pane
-3. Click the 📁 icon to browse for a directory, or type the path directly
-4. Click **Save** to apply
+5. Open **Preferences** (Mac: `Cmd+,` / Windows: `Ctrl+,`)
+6. Select the **Paths** pane
+7. Click the 📁 icon to browse for a directory, or type the path directly
+8. Click **Save** to apply
 
 ## WSL 用户指南 / WSL User Guide
 

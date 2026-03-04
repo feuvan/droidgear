@@ -386,9 +386,7 @@ pub async fn get_wsl_info() -> Result<WslInfo, String> {
         use std::process::Command;
 
         // Run wsl -l -v to get list of distributions
-        let output = Command::new("wsl")
-            .args(["-l", "-v"])
-            .output();
+        let output = Command::new("wsl").args(["-l", "-v"]).output();
 
         match output {
             Ok(output) => {
@@ -443,9 +441,7 @@ pub async fn get_wsl_username(distro: String) -> Result<String, String> {
             return Err("Failed to get WSL username".to_string());
         }
 
-        let username = String::from_utf8_lossy(&output.stdout)
-            .trim()
-            .to_string();
+        let username = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
         if username.is_empty() {
             return Err("Empty username returned from WSL".to_string());
@@ -458,7 +454,11 @@ pub async fn get_wsl_username(distro: String) -> Result<String, String> {
 /// Builds a WSL path for a config directory
 #[tauri::command]
 #[specta::specta]
-pub async fn build_wsl_path(distro: String, username: String, config_key: String) -> Result<String, String> {
+pub async fn build_wsl_path(
+    distro: String,
+    username: String,
+    config_key: String,
+) -> Result<String, String> {
     let subdir = match config_key.as_str() {
         "factory" => ".factory",
         "opencode" => ".config/opencode",
@@ -492,7 +492,10 @@ fn parse_wsl_list(output: &str) -> Vec<WslDistro> {
         // The format may have BOM characters or special spacing
 
         // Remove BOM and other special characters
-        let line: String = line.chars().filter(|c| c.is_alphanumeric() || c.is_whitespace() || *c == '*' || *c == '-').collect();
+        let line: String = line
+            .chars()
+            .filter(|c| c.is_alphanumeric() || c.is_whitespace() || *c == '*' || *c == '-')
+            .collect();
 
         // Check if default (starts with *)
         let is_default = line.starts_with('*');

@@ -182,7 +182,11 @@ function ProviderForm({
 
     // Auto-append /v1 for openai-completions if not already present
     let importedBaseUrl = context.baseUrl
-    if (resolvedApi === 'openai-completions' && importedBaseUrl.trim() && !/\/v\d/.test(importedBaseUrl.trim())) {
+    if (
+      resolvedApi === 'openai-completions' &&
+      importedBaseUrl.trim() &&
+      !/\/v\d/.test(importedBaseUrl.trim())
+    ) {
       importedBaseUrl = importedBaseUrl.trim().replace(/\/+$/, '') + '/v1'
     }
     setBaseUrl(importedBaseUrl)
@@ -225,7 +229,10 @@ function ProviderForm({
       const currentId = model.id
       const prevRegistry = findModelByIdOrAlias(currentId)
       // Auto-fill if name is empty, equals current id, or equals previous registry name
-      const shouldAutoFill = !currentName || currentName === currentId || currentName === prevRegistry?.name
+      const shouldAutoFill =
+        !currentName ||
+        currentName === currentId ||
+        currentName === prevRegistry?.name
       if (registry && shouldAutoFill) {
         updated[index] = {
           ...model,
@@ -341,14 +348,21 @@ function ProviderForm({
           {/* API Type */}
           <div className="space-y-2">
             <Label>{t('openclaw.provider.apiType')}</Label>
-            <Select value={api} onValueChange={value => {
-              setApi(value)
-              // Auto-append /v1 for openai-completions if not already present
-              if (value === 'openai-completions' && baseUrl.trim() && !/\/v\d/.test(baseUrl.trim())) {
-                const trimmed = baseUrl.trim().replace(/\/+$/, '')
-                setBaseUrl(trimmed + '/v1')
-              }
-            }}>
+            <Select
+              value={api}
+              onValueChange={value => {
+                setApi(value)
+                // Auto-append /v1 for openai-completions if not already present
+                if (
+                  value === 'openai-completions' &&
+                  baseUrl.trim() &&
+                  !/\/v\d/.test(baseUrl.trim())
+                ) {
+                  const trimmed = baseUrl.trim().replace(/\/+$/, '')
+                  setBaseUrl(trimmed + '/v1')
+                }
+              }}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -502,7 +502,9 @@ export function OpenClawConfigPage() {
             </h2>
             <div className="text-sm text-muted-foreground space-y-1">
               <div className="flex items-center gap-2">
-                <span className="shrink-0">{t('openclaw.configStatus.configPath')}:</span>
+                <span className="shrink-0">
+                  {t('openclaw.configStatus.configPath')}:
+                </span>
                 <code className="text-xs bg-muted px-1 py-0.5 rounded select-all cursor-text">
                   {configStatus.configPath}
                 </code>

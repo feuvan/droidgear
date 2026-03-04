@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { FolderOpen, RotateCcw, Check, AlertCircle, Loader2 } from 'lucide-react'
+import {
+  FolderOpen,
+  RotateCcw,
+  Check,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react'
 import { open } from '@tauri-apps/plugin-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -260,7 +266,11 @@ function WslDialog({
     if (!selectedDistro || !username) return
 
     try {
-      const result = await commands.buildWslPath(selectedDistro, username, 'openclaw')
+      const result = await commands.buildWslPath(
+        selectedDistro,
+        username,
+        'openclaw'
+      )
       if (result.status === 'ok') {
         onSelect(result.data)
         onOpenChange(false)
@@ -305,15 +315,23 @@ function WslDialog({
                 <label className="text-sm font-medium">
                   {t('preferences.paths.wslDialog.distro')}
                 </label>
-                <Select value={selectedDistro} onValueChange={handleDistroChange}>
+                <Select
+                  value={selectedDistro}
+                  onValueChange={handleDistroChange}
+                >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder={t('preferences.paths.wslDialog.selectDistro')} />
+                    <SelectValue
+                      placeholder={t(
+                        'preferences.paths.wslDialog.selectDistro'
+                      )}
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {wslInfo.distros.map(distro => (
                       <SelectItem key={distro.name} value={distro.name}>
                         {distro.name}
-                        {distro.isDefault && ` (${t('preferences.paths.wslDialog.default')})`}
+                        {distro.isDefault &&
+                          ` (${t('preferences.paths.wslDialog.default')})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -334,7 +352,9 @@ function WslDialog({
                     <Input
                       value={username}
                       onChange={e => setUsername(e.target.value)}
-                      placeholder={t('preferences.paths.wslDialog.usernamePlaceholder')}
+                      placeholder={t(
+                        'preferences.paths.wslDialog.usernamePlaceholder'
+                      )}
                     />
                   )}
                 </div>

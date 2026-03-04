@@ -2,7 +2,11 @@
   {
     "id": "claude-3.5-haiku",
     "name": "Claude 3.5 Haiku",
-    "aliases": ["claude-3-5-haiku-20241022", "claude-3-5-haiku", "claude-3.5-haiku-20241022"],
+    "aliases": [
+      "claude-3-5-haiku-20241022",
+      "claude-3-5-haiku",
+      "claude-3.5-haiku-20241022"
+    ],
     "platform": "anthropic-messages",
     "contextWindow": 200000,
     "maxOutputTokens": 8192
@@ -10,7 +14,11 @@
   {
     "id": "claude-3.5-sonnet",
     "name": "Claude 3.5 Sonnet",
-    "aliases": ["claude-3-5-sonnet-20241022", "claude-3-5-sonnet", "claude-3.5-sonnet-20241022"],
+    "aliases": [
+      "claude-3-5-sonnet-20241022",
+      "claude-3-5-sonnet",
+      "claude-3.5-sonnet-20241022"
+    ],
     "platform": "anthropic-messages",
     "contextWindow": 200000,
     "maxOutputTokens": 64000
@@ -18,7 +26,11 @@
   {
     "id": "claude-3.7-sonnet",
     "name": "Claude 3.7 Sonnet",
-    "aliases": ["claude-3-7-sonnet-20250219", "claude-3-7-sonnet", "claude-3.7-sonnet-20250219"],
+    "aliases": [
+      "claude-3-7-sonnet-20250219",
+      "claude-3-7-sonnet",
+      "claude-3.7-sonnet-20250219"
+    ],
     "platform": "anthropic-messages",
     "contextWindow": 200000,
     "maxOutputTokens": 64000
