@@ -8,6 +8,7 @@ Technical documentation for building and extending this app. These docs describe
 | --------------------------------------------- | ------------------------------------------------------- |
 | [Architecture Guide](./architecture-guide.md) | High-level overview, mental models, system architecture |
 | [Rust Architecture](./rust-architecture.md)   | Rust module organization and patterns                   |
+| [TUI Design](./tui-design.md)                 | Headless TUI architecture (core extraction + tests)     |
 | [State Management](./state-management.md)     | Three-layer state onion, Zustand, TanStack Query        |
 | [Error Handling](./error-handling.md)         | Error propagation, user feedback, retry patterns        |
 

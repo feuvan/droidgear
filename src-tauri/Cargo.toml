@@ -19,6 +19,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+droidgear-core = { path = "crates/droidgear-core" }
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
@@ -62,3 +63,6 @@ opt-level = "s"          # Optimize for size over speed
 panic = "abort"          # Don't include panic unwinding code
 strip = true             # Remove debug symbols
 
+[workspace]
+members = ["crates/droidgear-core", "crates/droidgear-tui"]
+resolver = "2"

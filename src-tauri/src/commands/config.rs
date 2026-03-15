@@ -1,282 +1,50 @@
-//! Factory settings.json management commands.
+//! Factory settings.json management commands (Tauri wrappers).
 //!
-//! Handles reading and writing customModels in ~/.factory/settings.json
+//! Core logic lives in `droidgear-core`.
 
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use specta::Type;
-use std::collections::HashMap;
-use std::path::PathBuf;
+pub use droidgear_core::factory_settings::{CustomModel, ModelInfo, Provider};
 use tauri::AppHandle;
-
-use super::paths;
-
-// ============================================================================
-// Config Read Result
-// ============================================================================
-
-/// Result of reading the config file
-pub enum ConfigReadResult {
-    /// Successfully parsed config
-    Ok(Value),
-    /// File does not exist
-    NotFound,
-    /// Failed to parse JSON (contains error message)
-    ParseError(String),
-}
-
-/// Error type for config operations that require valid JSON
-pub const CONFIG_PARSE_ERROR_PREFIX: &str = "CONFIG_PARSE_ERROR:";
-
-// ============================================================================
-// Types
-// ============================================================================
-
-/// Provider types supported by Factory BYOK
-#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq)]
-#[serde(rename_all = "kebab-case")]
-pub enum Provider {
-    Anthropic,
-    Openai,
-    GenericChatCompletionApi,
-}
-
-/// Custom model configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-#[serde(rename_all = "camelCase")]
-pub struct CustomModel {
-    /// Model identifier sent via API
-    pub model: String,
-    /// Unique identifier for the model (e.g., "custom:ModelName-0")
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>,
-    /// Index of the model in the list
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub index: Option<u32>,
-    /// Human-friendly name shown in model selector
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub display_name: Option<String>,
-    /// API endpoint base URL
-    pub base_url: String,
-    /// API key for the provider
-    pub api_key: String,
-    /// Provider type
-    pub provider: Provider,
-    /// Maximum output tokens
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_output_tokens: Option<u32>,
-    /// Whether the model supports image inputs
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub supports_images: Option<bool>,
-    /// Additional provider-specific arguments
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub extra_args: Option<HashMap<String, Value>>,
-    /// Additional HTTP headers
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub extra_headers: Option<HashMap<String, String>>,
-}
-
-/// Model info returned from API
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct ModelInfo {
-    pub id: String,
-    pub name: Option<String>,
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/// Gets the path to ~/.factory/settings.json
-fn get_factory_config_path() -> Result<PathBuf, String> {
-    let factory_dir = paths::get_factory_home()?;
-
-    // Ensure .factory directory exists
-    if !factory_dir.exists() {
-        std::fs::create_dir_all(&factory_dir)
-            .map_err(|e| format!("Failed to create .factory directory: {e}"))?;
-    }
-
-    Ok(factory_dir.join("settings.json"))
-}
-
-/// Reads the entire config.json file and returns a ConfigReadResult
-pub fn read_config_file() -> ConfigReadResult {
-    let config_path = match get_factory_config_path() {
-        Ok(path) => path,
-        Err(_) => return ConfigReadResult::NotFound,
-    };
-
-    if !config_path.exists() {
-        return ConfigReadResult::NotFound;
-    }
-
-    let contents = match std::fs::read_to_string(&config_path) {
-        Ok(c) => c,
-        Err(e) => return ConfigReadResult::ParseError(format!("Failed to read config file: {e}")),
-    };
-
-    if contents.trim().is_empty() {
-        return ConfigReadResult::NotFound;
-    }
-
-    match serde_json::from_str(&contents) {
-        Ok(value) => ConfigReadResult::Ok(value),
-        Err(e) => ConfigReadResult::ParseError(format!("Failed to parse config JSON: {e}")),
-    }
-}
-
-/// Writes the entire config.json file (atomic write)
-/// If the config file is a symlink, writes to the actual target file
-pub fn write_config_file(config: &Value) -> Result<(), String> {
-    let config_path = get_factory_config_path()?;
-
-    // Resolve symlink to get the actual file path
-    let actual_path = if config_path.is_symlink() {
-        std::fs::canonicalize(&config_path)
-            .map_err(|e| format!("Failed to resolve symlink: {e}"))?
-    } else {
-        config_path
-    };
-
-    let temp_path = actual_path.with_extension("tmp");
-
-    let json_content = serde_json::to_string_pretty(config)
-        .map_err(|e| format!("Failed to serialize config: {e}"))?;
-
-    std::fs::write(&temp_path, json_content)
-        .map_err(|e| format!("Failed to write config file: {e}"))?;
-
-    std::fs::rename(&temp_path, &actual_path).map_err(|e| {
-        let _ = std::fs::remove_file(&temp_path);
-        format!("Failed to finalize config file: {e}")
-    })?;
-
-    Ok(())
-}
-
-// ============================================================================
-// Tauri Commands
-// ============================================================================
 
 /// Gets the path to the Factory config file
 #[tauri::command]
 #[specta::specta]
 pub fn get_config_path() -> Result<String, String> {
-    let path = get_factory_config_path()?;
-    Ok(path.to_string_lossy().to_string())
+    droidgear_core::factory_settings::get_config_path()
 }
 
 /// Resets the config file to an empty JSON object
 #[tauri::command]
 #[specta::specta]
 pub async fn reset_config_file() -> Result<(), String> {
-    log::warn!("Resetting config file to empty object");
-    write_config_file(&serde_json::json!({}))?;
-    log::info!("Config file reset successfully");
-    Ok(())
+    droidgear_core::factory_settings::reset_config_file()
 }
 
 /// Loads custom models from settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn load_custom_models() -> Result<Vec<CustomModel>, String> {
-    log::debug!("Loading custom models from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => {
-            log::debug!("Config file not found, returning empty models");
-            return Ok(vec![]);
-        }
-        ConfigReadResult::ParseError(e) => {
-            log::warn!("Config file parse error: {e}, returning empty models");
-            return Ok(vec![]);
-        }
-    };
-
-    let models: Vec<CustomModel> = config
-        .get("customModels")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| serde_json::from_value(v.clone()).ok())
-                .collect()
-        })
-        .unwrap_or_default();
-
-    log::info!("Loaded {} custom models", models.len());
-    Ok(models)
+    droidgear_core::factory_settings::load_custom_models()
 }
 
 /// Saves custom models to settings.json (preserves other fields)
 #[tauri::command]
 #[specta::specta]
 pub async fn save_custom_models(models: Vec<CustomModel>) -> Result<(), String> {
-    log::debug!("Saving {} custom models to settings", models.len());
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    let models_value =
-        serde_json::to_value(&models).map_err(|e| format!("Failed to serialize models: {e}"))?;
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert("customModels".to_string(), models_value);
-    } else {
-        config = serde_json::json!({ "customModels": models_value });
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved {} custom models", models.len());
-    Ok(())
+    droidgear_core::factory_settings::save_custom_models(models)
 }
 
 /// Checks if legacy config.json exists and settings.json has customModels
 #[tauri::command]
 #[specta::specta]
 pub async fn check_legacy_config() -> Result<bool, String> {
-    let factory_dir = paths::get_factory_home()?;
-    let config_path = factory_dir.join("config.json");
-
-    // Check if legacy config.json exists
-    if !config_path.exists() {
-        return Ok(false);
-    }
-
-    // Check if settings.json has customModels
-    match read_config_file() {
-        ConfigReadResult::Ok(value) => {
-            let has_custom_models = value
-                .get("customModels")
-                .and_then(|v| v.as_array())
-                .map(|arr| !arr.is_empty())
-                .unwrap_or(false);
-            Ok(has_custom_models)
-        }
-        _ => Ok(false),
-    }
+    droidgear_core::factory_settings::check_legacy_config()
 }
 
 /// Deletes the legacy config.json file
 #[tauri::command]
 #[specta::specta]
 pub async fn delete_legacy_config() -> Result<(), String> {
-    let factory_dir = paths::get_factory_home()?;
-    let config_path = factory_dir.join("config.json");
-
-    if config_path.exists() {
-        std::fs::remove_file(&config_path)
-            .map_err(|e| format!("Failed to delete legacy config: {e}"))?;
-        log::info!("Deleted legacy config.json");
-    }
-    Ok(())
+    droidgear_core::factory_settings::delete_legacy_config()
 }
 
 /// Fetches available models from a provider API
@@ -288,178 +56,21 @@ pub async fn fetch_models(
     base_url: String,
     api_key: String,
 ) -> Result<Vec<ModelInfo>, String> {
-    log::debug!(
-        "Fetching models from {base_url} for provider {:?}",
-        provider
-    );
-
-    let client = reqwest::Client::new();
-
-    let models = match provider {
-        Provider::Anthropic => fetch_anthropic_models(&client, &base_url, &api_key).await?,
-        Provider::Openai | Provider::GenericChatCompletionApi => {
-            fetch_openai_models(&client, &base_url, &api_key).await?
-        }
-    };
-
-    log::info!("Fetched {} models", models.len());
-    Ok(models)
-}
-
-/// Fetches models from Anthropic API
-/// Falls back to OpenAI-style Bearer token auth for third-party proxy services
-async fn fetch_anthropic_models(
-    client: &reqwest::Client,
-    base_url: &str,
-    api_key: &str,
-) -> Result<Vec<ModelInfo>, String> {
-    let url = format!("{}/v1/models", base_url.trim_end_matches('/'));
-
-    // Try Anthropic official format first
-    let response = client
-        .get(&url)
-        .header("x-api-key", api_key)
-        .header("anthropic-version", "2023-06-01")
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {e}"))?;
-
-    // If Anthropic format fails, fallback to OpenAI format (Bearer token)
-    // Many third-party Anthropic proxies use OpenAI-style auth for /v1/models
-    let response = if !response.status().is_success() {
-        client
-            .get(&url)
-            .header("Authorization", format!("Bearer {api_key}"))
-            .send()
-            .await
-            .map_err(|e| format!("Request failed: {e}"))?
-    } else {
-        response
-    };
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!("API error {status}: {body}"));
-    }
-
-    let data: Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
-
-    let models = data
-        .get("data")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|m| {
-                    let id = m.get("id")?.as_str()?.to_string();
-                    let name = m
-                        .get("display_name")
-                        .and_then(|n| n.as_str())
-                        .map(String::from);
-                    Some(ModelInfo { id, name })
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-
-    Ok(models)
-}
-
-/// Fetches models from OpenAI-compatible API
-async fn fetch_openai_models(
-    client: &reqwest::Client,
-    base_url: &str,
-    api_key: &str,
-) -> Result<Vec<ModelInfo>, String> {
-    let url = format!("{}/v1/models", base_url.trim_end_matches('/'));
-
-    let response = client
-        .get(&url)
-        .header("Authorization", format!("Bearer {api_key}"))
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {e}"))?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        return Err(format!("API error {status}: {body}"));
-    }
-
-    let data: Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
-
-    let models = data
-        .get("data")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|m| {
-                    let id = m.get("id")?.as_str()?.to_string();
-                    Some(ModelInfo { id, name: None })
-                })
-                .collect()
-        })
-        .unwrap_or_default();
-
-    Ok(models)
+    droidgear_core::factory_settings::fetch_models(provider, &base_url, &api_key).await
 }
 
 /// Gets the default model ID from sessionDefaultSettings.model
 #[tauri::command]
 #[specta::specta]
 pub async fn get_default_model() -> Result<Option<String>, String> {
-    log::debug!("Getting default model from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok(None),
-        ConfigReadResult::ParseError(_) => return Ok(None),
-    };
-
-    let model_id = config
-        .get("sessionDefaultSettings")
-        .and_then(|s| s.get("model"))
-        .and_then(|m| m.as_str())
-        .map(String::from);
-
-    log::debug!("Default model: {:?}", model_id);
-    Ok(model_id)
+    droidgear_core::factory_settings::get_default_model()
 }
 
 /// Saves the default model ID to sessionDefaultSettings.model
 #[tauri::command]
 #[specta::specta]
 pub async fn save_default_model(model_id: String) -> Result<(), String> {
-    log::debug!("Saving default model: {}", model_id);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        let session_settings = obj
-            .entry("sessionDefaultSettings")
-            .or_insert_with(|| serde_json::json!({}));
-
-        if let Some(session_obj) = session_settings.as_object_mut() {
-            session_obj.insert("model".to_string(), serde_json::json!(model_id));
-        }
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved default model: {}", model_id);
-    Ok(())
+    droidgear_core::factory_settings::save_default_model(&model_id)
 }
 
 /// Gets the cloudSessionSync setting from settings.json
@@ -467,45 +78,14 @@ pub async fn save_default_model(model_id: String) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn get_cloud_session_sync() -> Result<bool, String> {
-    log::debug!("Getting cloudSessionSync from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok(true), // Default to true
-        ConfigReadResult::ParseError(_) => return Ok(true), // Default to true on error
-    };
-
-    let enabled = config
-        .get("cloudSessionSync")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true); // Default to true if not set
-
-    log::debug!("cloudSessionSync: {}", enabled);
-    Ok(enabled)
+    droidgear_core::factory_settings::get_cloud_session_sync()
 }
 
 /// Saves the cloudSessionSync setting to settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn save_cloud_session_sync(enabled: bool) -> Result<(), String> {
-    log::debug!("Saving cloudSessionSync: {}", enabled);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert("cloudSessionSync".to_string(), serde_json::json!(enabled));
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved cloudSessionSync: {}", enabled);
-    Ok(())
+    droidgear_core::factory_settings::save_cloud_session_sync(enabled)
 }
 
 /// Gets the reasoningEffort setting from settings.json
@@ -513,45 +93,14 @@ pub async fn save_cloud_session_sync(enabled: bool) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn get_reasoning_effort() -> Result<Option<String>, String> {
-    log::debug!("Getting reasoningEffort from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok(None),
-        ConfigReadResult::ParseError(_) => return Ok(None),
-    };
-
-    let value = config
-        .get("reasoningEffort")
-        .and_then(|v| v.as_str())
-        .map(String::from);
-
-    log::debug!("reasoningEffort: {:?}", value);
-    Ok(value)
+    droidgear_core::factory_settings::get_reasoning_effort()
 }
 
 /// Saves the reasoningEffort setting to settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn save_reasoning_effort(value: String) -> Result<(), String> {
-    log::debug!("Saving reasoningEffort: {}", value);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert("reasoningEffort".to_string(), serde_json::json!(value));
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved reasoningEffort: {}", value);
-    Ok(())
+    droidgear_core::factory_settings::save_reasoning_effort(&value)
 }
 
 /// Gets the diffMode setting from settings.json
@@ -559,46 +108,14 @@ pub async fn save_reasoning_effort(value: String) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn get_diff_mode() -> Result<String, String> {
-    log::debug!("Getting diffMode from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok("github".to_string()),
-        ConfigReadResult::ParseError(_) => return Ok("github".to_string()),
-    };
-
-    let value = config
-        .get("diffMode")
-        .and_then(|v| v.as_str())
-        .map(String::from)
-        .unwrap_or_else(|| "github".to_string());
-
-    log::debug!("diffMode: {}", value);
-    Ok(value)
+    droidgear_core::factory_settings::get_diff_mode()
 }
 
 /// Saves the diffMode setting to settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn save_diff_mode(value: String) -> Result<(), String> {
-    log::debug!("Saving diffMode: {}", value);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert("diffMode".to_string(), serde_json::json!(value));
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved diffMode: {}", value);
-    Ok(())
+    droidgear_core::factory_settings::save_diff_mode(&value)
 }
 
 /// Gets the todoDisplayMode setting from settings.json
@@ -606,46 +123,14 @@ pub async fn save_diff_mode(value: String) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn get_todo_display_mode() -> Result<String, String> {
-    log::debug!("Getting todoDisplayMode from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok("pinned".to_string()),
-        ConfigReadResult::ParseError(_) => return Ok("pinned".to_string()),
-    };
-
-    let value = config
-        .get("todoDisplayMode")
-        .and_then(|v| v.as_str())
-        .map(String::from)
-        .unwrap_or_else(|| "pinned".to_string());
-
-    log::debug!("todoDisplayMode: {}", value);
-    Ok(value)
+    droidgear_core::factory_settings::get_todo_display_mode()
 }
 
 /// Saves the todoDisplayMode setting to settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn save_todo_display_mode(value: String) -> Result<(), String> {
-    log::debug!("Saving todoDisplayMode: {}", value);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert("todoDisplayMode".to_string(), serde_json::json!(value));
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved todoDisplayMode: {}", value);
-    Ok(())
+    droidgear_core::factory_settings::save_todo_display_mode(&value)
 }
 
 /// Gets the includeCoAuthoredByDroid setting from settings.json
@@ -653,48 +138,14 @@ pub async fn save_todo_display_mode(value: String) -> Result<(), String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn get_include_co_authored_by_droid() -> Result<bool, String> {
-    log::debug!("Getting includeCoAuthoredByDroid from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok(true),
-        ConfigReadResult::ParseError(_) => return Ok(true),
-    };
-
-    let value = config
-        .get("includeCoAuthoredByDroid")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true);
-
-    log::debug!("includeCoAuthoredByDroid: {}", value);
-    Ok(value)
+    droidgear_core::factory_settings::get_include_co_authored_by_droid()
 }
 
 /// Saves the includeCoAuthoredByDroid setting to settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn save_include_co_authored_by_droid(enabled: bool) -> Result<(), String> {
-    log::debug!("Saving includeCoAuthoredByDroid: {}", enabled);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert(
-            "includeCoAuthoredByDroid".to_string(),
-            serde_json::json!(enabled),
-        );
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved includeCoAuthoredByDroid: {}", enabled);
-    Ok(())
+    droidgear_core::factory_settings::save_include_co_authored_by_droid(enabled)
 }
 
 /// Gets the showThinkingInMainView setting from settings.json
@@ -702,46 +153,13 @@ pub async fn save_include_co_authored_by_droid(enabled: bool) -> Result<(), Stri
 #[tauri::command]
 #[specta::specta]
 pub async fn get_show_thinking_in_main_view() -> Result<bool, String> {
-    log::debug!("Getting showThinkingInMainView from settings");
-
-    let config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => return Ok(false),
-        ConfigReadResult::ParseError(_) => return Ok(false),
-    };
-
-    let value = config
-        .get("showThinkingInMainView")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-
-    log::debug!("showThinkingInMainView: {}", value);
-    Ok(value)
+    droidgear_core::factory_settings::get_show_thinking_in_main_view()
 }
 
 /// Saves the showThinkingInMainView setting to settings.json
 #[tauri::command]
 #[specta::specta]
 pub async fn save_show_thinking_in_main_view(enabled: bool) -> Result<(), String> {
-    log::debug!("Saving showThinkingInMainView: {}", enabled);
-
-    let mut config = match read_config_file() {
-        ConfigReadResult::Ok(value) => value,
-        ConfigReadResult::NotFound => serde_json::json!({}),
-        ConfigReadResult::ParseError(e) => {
-            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
-        }
-    };
-
-    if let Some(obj) = config.as_object_mut() {
-        obj.insert(
-            "showThinkingInMainView".to_string(),
-            serde_json::json!(enabled),
-        );
-    }
-
-    write_config_file(&config)?;
-
-    log::info!("Successfully saved showThinkingInMainView: {}", enabled);
-    Ok(())
+    droidgear_core::factory_settings::save_show_thinking_in_main_view(enabled)
 }
+

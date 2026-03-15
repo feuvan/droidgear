@@ -1,0 +1,15 @@
+pub mod channel;
+pub mod codex;
+pub mod factory_settings;
+pub mod json;
+pub mod mcp;
+pub mod opencode;
+pub mod openclaw;
+pub mod paths;
+pub mod sessions;
+pub mod specs;
+pub mod storage;
+
+pub fn core_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
