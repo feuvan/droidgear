@@ -48,7 +48,10 @@ pub struct Toast {
 
 #[derive(Debug, Clone)]
 pub enum Modal {
-    Confirm { message: String, action: ConfirmAction },
+    Confirm {
+        message: String,
+        action: ConfirmAction,
+    },
     Input {
         title: String,
         value: String,
@@ -66,70 +69,219 @@ pub enum Modal {
 #[derive(Debug, Clone)]
 pub enum ConfirmAction {
     Quit,
-    PathsResetKey { key: String },
-    CodexApply { id: String },
-    CodexDelete { id: String },
-    CodexDeleteProvider { profile_id: String, provider_id: String },
-    OpenCodeApply { id: String },
-    OpenCodeDelete { id: String },
-    OpenCodeDeleteProvider { profile_id: String, provider_id: String },
-    OpenCodeDeleteModel { profile_id: String, provider_id: String, model_id: String },
-    OpenClawApply { id: String },
-    OpenClawDelete { id: String },
-    OpenClawDeleteProvider { profile_id: String, provider_id: String },
-    OpenClawDeleteModel { profile_id: String, provider_id: String, model_index: usize },
-    McpToggle { name: String, disabled: bool },
-    McpDelete { name: String },
-    FactorySetDefaultModel { model_id: String },
-    FactoryDeleteModel { index: usize },
-    SessionDelete { path: String },
-    SpecDelete { path: String },
-    ChannelDelete { id: String },
+    PathsResetKey {
+        key: String,
+    },
+    CodexApply {
+        id: String,
+    },
+    CodexDelete {
+        id: String,
+    },
+    CodexDeleteProvider {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeApply {
+        id: String,
+    },
+    OpenCodeDelete {
+        id: String,
+    },
+    OpenCodeDeleteProvider {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeDeleteModel {
+        profile_id: String,
+        provider_id: String,
+        model_id: String,
+    },
+    OpenClawApply {
+        id: String,
+    },
+    OpenClawDelete {
+        id: String,
+    },
+    OpenClawDeleteProvider {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenClawDeleteModel {
+        profile_id: String,
+        provider_id: String,
+        model_index: usize,
+    },
+    McpToggle {
+        name: String,
+        disabled: bool,
+    },
+    McpDelete {
+        name: String,
+    },
+    FactorySetDefaultModel {
+        model_id: String,
+    },
+    FactoryDeleteModel {
+        index: usize,
+    },
+    SessionDelete {
+        path: String,
+    },
+    SpecDelete {
+        path: String,
+    },
+    ChannelDelete {
+        id: String,
+    },
 }
 
 #[derive(Debug, Clone)]
 pub enum InputAction {
-    PathsSetKey { key: String },
+    PathsSetKey {
+        key: String,
+    },
     CodexCreateProfile,
-    CodexDuplicate { id: String },
-    CodexSetProfileName { id: String },
-    CodexSetProfileDescription { id: String },
-    CodexSetProfileModel { id: String },
-    CodexSetProfileApiKey { id: String },
-    CodexAddProvider { id: String },
-    CodexSetProviderName { profile_id: String, provider_id: String },
-    CodexSetProviderBaseUrl { profile_id: String, provider_id: String },
-    CodexSetProviderApiKey { profile_id: String, provider_id: String },
-    CodexSetProviderModel { profile_id: String, provider_id: String },
+    CodexDuplicate {
+        id: String,
+    },
+    CodexSetProfileName {
+        id: String,
+    },
+    CodexSetProfileDescription {
+        id: String,
+    },
+    CodexSetProfileModel {
+        id: String,
+    },
+    CodexSetProfileApiKey {
+        id: String,
+    },
+    CodexAddProvider {
+        id: String,
+    },
+    CodexSetProviderName {
+        profile_id: String,
+        provider_id: String,
+    },
+    CodexSetProviderBaseUrl {
+        profile_id: String,
+        provider_id: String,
+    },
+    CodexSetProviderApiKey {
+        profile_id: String,
+        provider_id: String,
+    },
+    CodexSetProviderModel {
+        profile_id: String,
+        provider_id: String,
+    },
     OpenCodeCreateProfile,
-    OpenCodeDuplicate { id: String },
-    OpenCodeSetProfileName { id: String },
-    OpenCodeSetProfileDescription { id: String },
-    OpenCodeAddProvider { profile_id: String },
-    OpenCodeSetProviderName { profile_id: String, provider_id: String },
-    OpenCodeSetProviderNpm { profile_id: String, provider_id: String },
-    OpenCodeSetProviderBaseUrl { profile_id: String, provider_id: String },
-    OpenCodeSetProviderApiKey { profile_id: String, provider_id: String },
-    OpenCodeSetProviderTimeout { profile_id: String, provider_id: String },
-    OpenCodeAddModel { profile_id: String, provider_id: String },
-    OpenCodeSetModelName { profile_id: String, provider_id: String, model_id: String },
-    OpenCodeSetModelContextLimit { profile_id: String, provider_id: String, model_id: String },
-    OpenCodeSetModelOutputLimit { profile_id: String, provider_id: String, model_id: String },
+    OpenCodeDuplicate {
+        id: String,
+    },
+    OpenCodeSetProfileName {
+        id: String,
+    },
+    OpenCodeSetProfileDescription {
+        id: String,
+    },
+    OpenCodeAddProvider {
+        profile_id: String,
+    },
+    OpenCodeSetProviderName {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeSetProviderNpm {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeSetProviderBaseUrl {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeSetProviderApiKey {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeSetProviderTimeout {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeAddModel {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeSetModelName {
+        profile_id: String,
+        provider_id: String,
+        model_id: String,
+    },
+    OpenCodeSetModelContextLimit {
+        profile_id: String,
+        provider_id: String,
+        model_id: String,
+    },
+    OpenCodeSetModelOutputLimit {
+        profile_id: String,
+        provider_id: String,
+        model_id: String,
+    },
     OpenClawCreateProfile,
-    OpenClawDuplicate { id: String },
-    OpenClawSetProfileName { id: String },
-    OpenClawSetProfileDescription { id: String },
-    OpenClawAddProvider { profile_id: String },
-    OpenClawSetProviderBaseUrl { profile_id: String, provider_id: String },
-    OpenClawSetProviderApiKey { profile_id: String, provider_id: String },
-    OpenClawAddModel { profile_id: String, provider_id: String },
-    OpenClawSetModelId { profile_id: String, provider_id: String, model_index: usize },
-    OpenClawSetModelName { profile_id: String, provider_id: String, model_index: usize },
-    OpenClawSetModelContextWindow { profile_id: String, provider_id: String, model_index: usize },
-    OpenClawSetModelMaxTokens { profile_id: String, provider_id: String, model_index: usize },
-    OpenClawSetBlockStreamingMinChars { profile_id: String },
-    OpenClawSetBlockStreamingMaxChars { profile_id: String },
-    OpenClawSetBlockStreamingIdleMs { profile_id: String },
+    OpenClawDuplicate {
+        id: String,
+    },
+    OpenClawSetProfileName {
+        id: String,
+    },
+    OpenClawSetProfileDescription {
+        id: String,
+    },
+    OpenClawAddProvider {
+        profile_id: String,
+    },
+    OpenClawSetProviderBaseUrl {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenClawSetProviderApiKey {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenClawAddModel {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenClawSetModelId {
+        profile_id: String,
+        provider_id: String,
+        model_index: usize,
+    },
+    OpenClawSetModelName {
+        profile_id: String,
+        provider_id: String,
+        model_index: usize,
+    },
+    OpenClawSetModelContextWindow {
+        profile_id: String,
+        provider_id: String,
+        model_index: usize,
+    },
+    OpenClawSetModelMaxTokens {
+        profile_id: String,
+        provider_id: String,
+        model_index: usize,
+    },
+    OpenClawSetBlockStreamingMinChars {
+        profile_id: String,
+    },
+    OpenClawSetBlockStreamingMaxChars {
+        profile_id: String,
+    },
+    OpenClawSetBlockStreamingIdleMs {
+        profile_id: String,
+    },
     FactoryDraftSetBaseUrl,
     FactoryDraftSetApiKey,
     FactoryDraftSetModel,
@@ -140,9 +292,16 @@ pub enum InputAction {
     McpDraftSetCommand,
     McpDraftSetUrl,
     McpArgsAdd,
-    McpArgsEdit { index: usize },
-    McpKeyValueAdd { mode: McpKeyValuesMode },
-    McpKeyValueEdit { mode: McpKeyValuesMode, index: usize },
+    McpArgsEdit {
+        index: usize,
+    },
+    McpKeyValueAdd {
+        mode: McpKeyValuesMode,
+    },
+    McpKeyValueEdit {
+        mode: McpKeyValuesMode,
+        index: usize,
+    },
     ChannelsDraftSetName,
     ChannelsDraftSetBaseUrl,
     ChannelsDraftSetUsername,
@@ -153,17 +312,42 @@ pub enum InputAction {
 #[derive(Debug, Clone)]
 pub enum SelectAction {
     GoToNav,
-    CodexSetProfileModelProvider { id: String },
-    CodexSetProfileReasoningEffort { id: String },
-    CodexSetProviderWireApi { profile_id: String, provider_id: String },
-    CodexSetProviderReasoningEffort { profile_id: String, provider_id: String },
-    OpenCodeImportProviders { id: String },
-    OpenClawSetDefaultModel { id: String },
-    OpenClawAddFailoverModel { id: String },
-    OpenClawSetProviderApiType { profile_id: String, provider_id: String },
-    OpenClawSetBlockStreamingDefault { id: String },
-    OpenClawSetBlockStreamingBreak { id: String },
-    OpenClawSetTelegramChunkMode { id: String },
+    CodexSetProfileModelProvider {
+        id: String,
+    },
+    CodexSetProfileReasoningEffort {
+        id: String,
+    },
+    CodexSetProviderWireApi {
+        profile_id: String,
+        provider_id: String,
+    },
+    CodexSetProviderReasoningEffort {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenCodeImportProviders {
+        id: String,
+    },
+    OpenClawSetDefaultModel {
+        id: String,
+    },
+    OpenClawAddFailoverModel {
+        id: String,
+    },
+    OpenClawSetProviderApiType {
+        profile_id: String,
+        provider_id: String,
+    },
+    OpenClawSetBlockStreamingDefault {
+        id: String,
+    },
+    OpenClawSetBlockStreamingBreak {
+        id: String,
+    },
+    OpenClawSetTelegramChunkMode {
+        id: String,
+    },
     FactoryDraftSetProvider,
     McpDraftSetType,
     ChannelsDraftSetType,
@@ -455,7 +639,9 @@ impl App {
             .as_ref()
             .map(|s| match self.mcp_kv_mode {
                 McpKeyValuesMode::Env => s.config.env.as_ref().map(|m| m.len()).unwrap_or(0),
-                McpKeyValuesMode::Headers => s.config.headers.as_ref().map(|m| m.len()).unwrap_or(0),
+                McpKeyValuesMode::Headers => {
+                    s.config.headers.as_ref().map(|m| m.len()).unwrap_or(0)
+                }
             })
             .unwrap_or(0);
         if self.mcp_kv_index >= mcp_kv_count {
@@ -469,7 +655,8 @@ impl App {
             self.codex_detail_field_index = codex_fields_count.saturating_sub(1);
         }
         if self.codex_detail_provider_index >= self.codex_detail_provider_ids.len() {
-            self.codex_detail_provider_index = self.codex_detail_provider_ids.len().saturating_sub(1);
+            self.codex_detail_provider_index =
+                self.codex_detail_provider_ids.len().saturating_sub(1);
         }
         let codex_provider_fields_count = 6;
         if self.codex_provider_field_index >= codex_provider_fields_count {
@@ -483,14 +670,16 @@ impl App {
             self.opencode_detail_field_index = opencode_fields_count.saturating_sub(1);
         }
         if self.opencode_detail_provider_index >= self.opencode_detail_provider_ids.len() {
-            self.opencode_detail_provider_index = self.opencode_detail_provider_ids.len().saturating_sub(1);
+            self.opencode_detail_provider_index =
+                self.opencode_detail_provider_ids.len().saturating_sub(1);
         }
         let opencode_provider_fields_count = 5;
         if self.opencode_provider_field_index >= opencode_provider_fields_count {
             self.opencode_provider_field_index = opencode_provider_fields_count.saturating_sub(1);
         }
         if self.opencode_provider_model_index >= self.opencode_provider_model_ids.len() {
-            self.opencode_provider_model_index = self.opencode_provider_model_ids.len().saturating_sub(1);
+            self.opencode_provider_model_index =
+                self.opencode_provider_model_ids.len().saturating_sub(1);
         }
         let opencode_model_fields_count = 3;
         if self.opencode_model_field_index >= opencode_model_fields_count {
@@ -520,7 +709,8 @@ impl App {
                 .saturating_sub(1);
         }
         if self.openclaw_detail_provider_index >= self.openclaw_detail_provider_ids.len() {
-            self.openclaw_detail_provider_index = self.openclaw_detail_provider_ids.len().saturating_sub(1);
+            self.openclaw_detail_provider_index =
+                self.openclaw_detail_provider_ids.len().saturating_sub(1);
         }
         let openclaw_provider_fields_count = 3;
         if self.openclaw_provider_field_index >= openclaw_provider_fields_count {
@@ -530,14 +720,22 @@ impl App {
             >= self
                 .openclaw_detail
                 .as_ref()
-                .and_then(|p| self.openclaw_provider_id.as_deref().and_then(|pid| p.providers.get(pid)))
+                .and_then(|p| {
+                    self.openclaw_provider_id
+                        .as_deref()
+                        .and_then(|pid| p.providers.get(pid))
+                })
                 .map(|p| p.models.len())
                 .unwrap_or(0)
         {
             self.openclaw_provider_model_index = self
                 .openclaw_detail
                 .as_ref()
-                .and_then(|p| self.openclaw_provider_id.as_deref().and_then(|pid| p.providers.get(pid)))
+                .and_then(|p| {
+                    self.openclaw_provider_id
+                        .as_deref()
+                        .and_then(|pid| p.providers.get(pid))
+                })
                 .map(|p| p.models.len())
                 .unwrap_or(0)
                 .saturating_sub(1);
@@ -569,7 +767,11 @@ impl App {
                         | droidgear_core::channel::ChannelType::Ollama
                         | droidgear_core::channel::ChannelType::General
                 );
-                if uses_api_key { 5 } else { 6 }
+                if uses_api_key {
+                    5
+                } else {
+                    6
+                }
             })
             .unwrap_or(0);
         if self.channels_edit_field_index >= channels_edit_fields_count {

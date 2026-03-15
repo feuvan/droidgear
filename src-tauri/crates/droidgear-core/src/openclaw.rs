@@ -541,7 +541,10 @@ fn build_openclaw_config(profile: &OpenClawProfile) -> Value {
     Value::Object(config)
 }
 
-fn write_openclaw_config_for_home(home_dir: &Path, profile: &OpenClawProfile) -> Result<(), String> {
+fn write_openclaw_config_for_home(
+    home_dir: &Path,
+    profile: &OpenClawProfile,
+) -> Result<(), String> {
     let config_path = openclaw_config_path_for_home(home_dir)?;
 
     // Read existing config and merge with replace strategy for model configs
@@ -581,7 +584,10 @@ pub fn get_openclaw_profile_for_home(home_dir: &Path, id: &str) -> Result<OpenCl
     load_profile_by_id(home_dir, id)
 }
 
-pub fn save_openclaw_profile_for_home(home_dir: &Path, mut profile: OpenClawProfile) -> Result<(), String> {
+pub fn save_openclaw_profile_for_home(
+    home_dir: &Path,
+    mut profile: OpenClawProfile,
+) -> Result<(), String> {
     if profile.id.trim().is_empty() {
         profile.id = Uuid::new_v4().to_string();
         profile.created_at = now_rfc3339();
@@ -629,7 +635,9 @@ pub fn duplicate_openclaw_profile_for_home(
 
 /// Create default profile (when no profiles exist)
 /// If openclaw.json exists, initialize profile from its content
-pub fn create_default_openclaw_profile_for_home(home_dir: &Path) -> Result<OpenClawProfile, String> {
+pub fn create_default_openclaw_profile_for_home(
+    home_dir: &Path,
+) -> Result<OpenClawProfile, String> {
     let id = Uuid::new_v4().to_string();
     let now = now_rfc3339();
 
@@ -695,7 +703,9 @@ pub fn apply_openclaw_profile_for_home(home_dir: &Path, id: &str) -> Result<(), 
     Ok(())
 }
 
-pub fn get_openclaw_config_status_for_home(home_dir: &Path) -> Result<OpenClawConfigStatus, String> {
+pub fn get_openclaw_config_status_for_home(
+    home_dir: &Path,
+) -> Result<OpenClawConfigStatus, String> {
     let config_path = openclaw_config_path_for_home(home_dir)?;
     Ok(OpenClawConfigStatus {
         config_exists: config_path.exists(),
@@ -703,7 +713,9 @@ pub fn get_openclaw_config_status_for_home(home_dir: &Path) -> Result<OpenClawCo
     })
 }
 
-pub fn read_openclaw_current_config_for_home(home_dir: &Path) -> Result<OpenClawCurrentConfig, String> {
+pub fn read_openclaw_current_config_for_home(
+    home_dir: &Path,
+) -> Result<OpenClawCurrentConfig, String> {
     let config_path = openclaw_config_path_for_home(home_dir)?;
     if !config_path.exists() {
         return Ok(OpenClawCurrentConfig {

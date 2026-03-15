@@ -162,4 +162,3 @@ pub async fn get_show_thinking_in_main_view() -> Result<bool, String> {
 pub async fn save_show_thinking_in_main_view(enabled: bool) -> Result<(), String> {
     droidgear_core::factory_settings::save_show_thinking_in_main_view(enabled)
 }
-

@@ -86,6 +86,67 @@ Run the installer directly.
 - **Exit Protection** - Warns before closing with unsaved changes
 - **Cross-Platform** - Works on macOS, Windows, and Linux
 
+## TUI Version (Headless Terminal)
+
+DroidGear TUI is a terminal interface version designed for SSH and headless environments, sharing the same configuration files and core functionality with the desktop version.
+
+### Installation
+
+Download the `droidgear-tui` binary for your platform from [Releases](https://github.com/sunshow/droid-switch/releases):
+
+- macOS (Apple Silicon): `droidgear-tui-*-aarch64-apple-darwin.tar.gz`
+- macOS (Intel): `droidgear-tui-*-x86_64-apple-darwin.tar.gz`
+- Linux: `droidgear-tui-*-x86_64-unknown-linux-gnu.tar.gz`
+- Windows: `droidgear-tui-*-x86_64-pc-windows-msvc.zip`
+
+Extract and place the binary in your PATH (e.g., `/usr/local/bin`).
+
+### Running
+
+```bash
+# Use default configuration (reads from ~/.factory and ~/.droidgear)
+droidgear-tui
+
+# Specify custom HOME path (for containers/testing)
+droidgear-tui --home /path/to/custom/home
+```
+
+### Supported Features
+
+The TUI version supports the following configuration management features:
+
+- **Factory Configuration**: Custom model management, default model settings
+- **MCP Servers**: CRUD operations, enable/disable, import/export
+- **Codex Profiles**: Configuration file management, change preview, one-click apply
+- **OpenCode Profiles**: Provider/Auth configuration management
+- **OpenClaw Profiles**: Configuration management and apply
+- **Sessions**: Session browsing and management
+- **Paths**: Path override configuration (for server environments)
+- **Channels**: Proxy platform and credential management
+
+### Basic Operations
+
+- `↑/↓` or `j/k`: Move up/down
+- `Enter`: Enter/Confirm
+- `Esc`: Back/Cancel
+- `Tab`: Switch focus area
+- `Ctrl+S`: Preview changes (edit page)
+- `y/N`: Confirm apply changes
+- `q`: Quit (main screen)
+
+### Configuration Files
+
+The TUI version shares configuration files with the desktop version:
+
+- Factory config: `~/.factory/settings.json`
+- MCP config: `~/.factory/mcp.json`
+- DroidGear config: `~/.droidgear/`
+- Codex config: `~/.codex/`
+- OpenCode config: `~/.config/opencode/`
+- OpenClaw config: `~/.openclaw/`
+
+For detailed design documentation, see [docs/developer/tui-design.md](docs/developer/tui-design.md)
+
 ## Configuration
 
 DroidGear reads and writes to `~/.factory/settings.json`:

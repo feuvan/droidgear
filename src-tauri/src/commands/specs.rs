@@ -110,4 +110,3 @@ pub async fn stop_specs_watcher(app: AppHandle) -> Result<(), String> {
 
     Ok(())
 }
-

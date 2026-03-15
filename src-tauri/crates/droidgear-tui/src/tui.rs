@@ -1,3 +1,5 @@
+#![allow(clippy::question_mark)]
+
 use crate::{app, editor, ui};
 use anyhow::Context;
 use crossterm::{
@@ -86,9 +88,7 @@ fn run_action_with_terminal(
     let result = run_action(app, action);
     let resume_result = resume_terminal(terminal);
 
-    if let Err(e) = resume_result {
-        return Err(e);
-    }
+    resume_result?;
     result
 }
 
@@ -129,7 +129,9 @@ fn refresh_screen_data(app: &mut app::App) {
             refresh_codex_detail(app);
         }
         app::Screen::OpenCode => refresh_opencode(app),
-        app::Screen::OpenCodeProfile | app::Screen::OpenCodeProvider | app::Screen::OpenCodeModel => {
+        app::Screen::OpenCodeProfile
+        | app::Screen::OpenCodeProvider
+        | app::Screen::OpenCodeModel => {
             refresh_opencode(app);
             refresh_opencode_detail(app);
         }
@@ -180,9 +182,8 @@ fn refresh_codex(app: &mut app::App) {
     }
 
     if app.codex_profiles.is_empty() {
-        match droidgear_core::codex::create_default_codex_profile_for_home(&app.home_dir) {
-            Ok(p) => app.codex_profiles = vec![p],
-            Err(_) => {}
+        if let Ok(p) = droidgear_core::codex::create_default_codex_profile_for_home(&app.home_dir) {
+            app.codex_profiles = vec![p]
         }
     }
 
@@ -200,12 +201,10 @@ fn refresh_codex_detail(app: &mut app::App) {
     };
     match droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id) {
         Ok(profile) => {
-            app.codex_detail_provider_ids = profile
-                .providers
-                .keys()
-                .cloned()
-                .collect::<Vec<String>>();
-            app.codex_detail_provider_ids.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+            app.codex_detail_provider_ids =
+                profile.providers.keys().cloned().collect::<Vec<String>>();
+            app.codex_detail_provider_ids
+                .sort_by_key(|a| a.to_lowercase());
             app.codex_detail = Some(profile);
         }
         Err(e) => {
@@ -251,9 +250,8 @@ fn refresh_opencode(app: &mut app::App) {
     }
 
     if app.opencode_profiles.is_empty() {
-        match droidgear_core::opencode::create_default_profile_for_home(&app.home_dir) {
-            Ok(p) => app.opencode_profiles = vec![p],
-            Err(_) => {}
+        if let Ok(p) = droidgear_core::opencode::create_default_profile_for_home(&app.home_dir) {
+            app.opencode_profiles = vec![p]
         }
     }
 
@@ -273,12 +271,10 @@ fn refresh_opencode_detail(app: &mut app::App) {
 
     match droidgear_core::opencode::get_opencode_profile_for_home(&app.home_dir, &id) {
         Ok(profile) => {
-            app.opencode_detail_provider_ids = profile
-                .providers
-                .keys()
-                .cloned()
-                .collect::<Vec<String>>();
-            app.opencode_detail_provider_ids.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+            app.opencode_detail_provider_ids =
+                profile.providers.keys().cloned().collect::<Vec<String>>();
+            app.opencode_detail_provider_ids
+                .sort_by_key(|a| a.to_lowercase());
 
             if let Some(provider_id) = app.opencode_provider_id.as_deref() {
                 app.opencode_provider_model_ids = profile
@@ -287,7 +283,7 @@ fn refresh_opencode_detail(app: &mut app::App) {
                     .and_then(|p| p.models.as_ref())
                     .map(|m| {
                         let mut ids = m.keys().cloned().collect::<Vec<String>>();
-                        ids.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                        ids.sort_by_key(|a| a.to_lowercase());
                         ids
                     })
                     .unwrap_or_default();
@@ -313,9 +309,10 @@ fn refresh_openclaw(app: &mut app::App) {
     }
 
     if app.openclaw_profiles.is_empty() {
-        match droidgear_core::openclaw::create_default_openclaw_profile_for_home(&app.home_dir) {
-            Ok(p) => app.openclaw_profiles = vec![p],
-            Err(_) => {}
+        if let Ok(p) =
+            droidgear_core::openclaw::create_default_openclaw_profile_for_home(&app.home_dir)
+        {
+            app.openclaw_profiles = vec![p]
         }
     }
 
@@ -333,12 +330,10 @@ fn refresh_openclaw_detail(app: &mut app::App) {
     };
     match droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &id) {
         Ok(profile) => {
-            app.openclaw_detail_provider_ids = profile
-                .providers
-                .keys()
-                .cloned()
-                .collect::<Vec<String>>();
-            app.openclaw_detail_provider_ids.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+            app.openclaw_detail_provider_ids =
+                profile.providers.keys().cloned().collect::<Vec<String>>();
+            app.openclaw_detail_provider_ids
+                .sort_by_key(|a| a.to_lowercase());
             app.openclaw_detail = Some(profile);
         }
         Err(e) => {
@@ -406,10 +401,12 @@ fn handle_key(app: &mut app::App, code: KeyCode) -> Option<Action> {
 
 fn handle_main_key(app: &mut app::App, code: KeyCode) -> Option<Action> {
     match code {
-        KeyCode::Char('q') => app.modal = Some(app::Modal::Confirm {
-            message: "Quit DroidGear TUI?".to_string(),
-            action: app::ConfirmAction::Quit,
-        }),
+        KeyCode::Char('q') => {
+            app.modal = Some(app::Modal::Confirm {
+                message: "Quit DroidGear TUI?".to_string(),
+                action: app::ConfirmAction::Quit,
+            })
+        }
         KeyCode::Char('s') => {
             let options: Vec<String> = app::App::nav_items()
                 .iter()
@@ -566,8 +563,12 @@ fn handle_factory_model_key(app: &mut app::App, code: KeyCode) -> Option<Action>
             app.factory_edit_index = None;
             app.screen = app::Screen::Factory;
         }
-        KeyCode::Down => app.factory_model_field_index = app.factory_model_field_index.saturating_add(1),
-        KeyCode::Up => app.factory_model_field_index = app.factory_model_field_index.saturating_sub(1),
+        KeyCode::Down => {
+            app.factory_model_field_index = app.factory_model_field_index.saturating_add(1)
+        }
+        KeyCode::Up => {
+            app.factory_model_field_index = app.factory_model_field_index.saturating_sub(1)
+        }
         KeyCode::Char('s') => {
             let Some(mut draft) = app.factory_draft.clone() else {
                 return None;
@@ -630,7 +631,9 @@ fn handle_factory_model_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                 let current = match draft.provider {
                     droidgear_core::factory_settings::Provider::Anthropic => "anthropic",
                     droidgear_core::factory_settings::Provider::Openai => "openai",
-                    droidgear_core::factory_settings::Provider::GenericChatCompletionApi => "generic-chat-completion-api",
+                    droidgear_core::factory_settings::Provider::GenericChatCompletionApi => {
+                        "generic-chat-completion-api"
+                    }
                 };
                 let index = options.iter().position(|o| o == current).unwrap_or(0);
                 app.modal = Some(app::Modal::Select {
@@ -727,7 +730,11 @@ fn handle_mcp_key(app: &mut app::App, code: KeyCode) -> Option<Action> {
                     message: format!(
                         "Toggle MCP server '{}' to {}?",
                         server.name,
-                        if server.config.disabled { "enabled" } else { "disabled" }
+                        if server.config.disabled {
+                            "enabled"
+                        } else {
+                            "disabled"
+                        }
                     ),
                     action: app::ConfirmAction::McpToggle {
                         name: server.name.clone(),
@@ -851,7 +858,8 @@ fn handle_mcp_server_key(app: &mut app::App, code: KeyCode) -> Option<Action> {
                 }
             }
 
-            if let Err(e) = droidgear_core::mcp::save_mcp_server_for_home(&app.home_dir, server.clone())
+            if let Err(e) =
+                droidgear_core::mcp::save_mcp_server_for_home(&app.home_dir, server.clone())
             {
                 app.set_toast(e, true);
                 return None;
@@ -1032,7 +1040,7 @@ fn handle_mcp_key_values_key(app: &mut app::App, code: KeyCode) -> Option<Action
             .map(|m| m.keys().cloned().collect())
             .unwrap_or_default(),
     };
-    keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    keys.sort_by_key(|a| a.to_lowercase());
 
     match code {
         KeyCode::Esc | KeyCode::Char('q') => app.screen = app::Screen::McpServer,
@@ -1255,7 +1263,10 @@ fn handle_codex_profile_key(app: &mut app::App, code: KeyCode) -> Option<Action>
         }
         KeyCode::Char('d') => {
             if app.codex_detail_focus == app::CodexDetailFocus::Providers {
-                if let Some(provider_id) = app.codex_detail_provider_ids.get(app.codex_detail_provider_index) {
+                if let Some(provider_id) = app
+                    .codex_detail_provider_ids
+                    .get(app.codex_detail_provider_index)
+                {
                     app.modal = Some(app::Modal::Confirm {
                         message: format!("Delete provider '{provider_id}'?"),
                         action: app::ConfirmAction::CodexDeleteProvider {
@@ -1327,7 +1338,9 @@ fn handle_codex_profile_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                         title: "Reasoning effort".to_string(),
                         options,
                         index,
-                        action: app::SelectAction::CodexSetProfileReasoningEffort { id: profile_id },
+                        action: app::SelectAction::CodexSetProfileReasoningEffort {
+                            id: profile_id,
+                        },
                     });
                 }
                 5 => {
@@ -1341,7 +1354,10 @@ fn handle_codex_profile_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                 _ => {}
             },
             app::CodexDetailFocus::Providers => {
-                if let Some(provider_id) = app.codex_detail_provider_ids.get(app.codex_detail_provider_index) {
+                if let Some(provider_id) = app
+                    .codex_detail_provider_ids
+                    .get(app.codex_detail_provider_index)
+                {
                     app.codex_provider_id = Some(provider_id.clone());
                     app.codex_provider_field_index = 0;
                     app.screen = app::Screen::CodexProvider;
@@ -1376,8 +1392,12 @@ fn handle_codex_provider_key(app: &mut app::App, code: KeyCode) -> Option<Action
         KeyCode::Esc | KeyCode::Char('q') => {
             app.screen = app::Screen::CodexProfile;
         }
-        KeyCode::Down => app.codex_provider_field_index = app.codex_provider_field_index.saturating_add(1),
-        KeyCode::Up => app.codex_provider_field_index = app.codex_provider_field_index.saturating_sub(1),
+        KeyCode::Down => {
+            app.codex_provider_field_index = app.codex_provider_field_index.saturating_add(1)
+        }
+        KeyCode::Up => {
+            app.codex_provider_field_index = app.codex_provider_field_index.saturating_sub(1)
+        }
         KeyCode::Enter | KeyCode::Char('e') => match app.codex_provider_field_index {
             0 => {
                 app.modal = Some(app::Modal::Input {
@@ -1699,18 +1719,22 @@ fn handle_opencode_provider_key(app: &mut app::App, code: KeyCode) -> Option<Act
         }
         KeyCode::Down => match app.opencode_provider_focus {
             app::CodexDetailFocus::Fields => {
-                app.opencode_provider_field_index = app.opencode_provider_field_index.saturating_add(1)
+                app.opencode_provider_field_index =
+                    app.opencode_provider_field_index.saturating_add(1)
             }
             app::CodexDetailFocus::Providers => {
-                app.opencode_provider_model_index = app.opencode_provider_model_index.saturating_add(1)
+                app.opencode_provider_model_index =
+                    app.opencode_provider_model_index.saturating_add(1)
             }
         },
         KeyCode::Up => match app.opencode_provider_focus {
             app::CodexDetailFocus::Fields => {
-                app.opencode_provider_field_index = app.opencode_provider_field_index.saturating_sub(1)
+                app.opencode_provider_field_index =
+                    app.opencode_provider_field_index.saturating_sub(1)
             }
             app::CodexDetailFocus::Providers => {
-                app.opencode_provider_model_index = app.opencode_provider_model_index.saturating_sub(1)
+                app.opencode_provider_model_index =
+                    app.opencode_provider_model_index.saturating_sub(1)
             }
         },
         KeyCode::Char('n') => {
@@ -1866,8 +1890,12 @@ fn handle_opencode_model_key(app: &mut app::App, code: KeyCode) -> Option<Action
 
     match code {
         KeyCode::Esc | KeyCode::Char('q') => app.screen = app::Screen::OpenCodeProvider,
-        KeyCode::Down => app.opencode_model_field_index = app.opencode_model_field_index.saturating_add(1),
-        KeyCode::Up => app.opencode_model_field_index = app.opencode_model_field_index.saturating_sub(1),
+        KeyCode::Down => {
+            app.opencode_model_field_index = app.opencode_model_field_index.saturating_add(1)
+        }
+        KeyCode::Up => {
+            app.opencode_model_field_index = app.opencode_model_field_index.saturating_sub(1)
+        }
         KeyCode::Enter | KeyCode::Char('e') => match app.opencode_model_field_index {
             0 => {
                 app.modal = Some(app::Modal::Input {
@@ -1997,7 +2025,9 @@ fn handle_openclaw_key(app: &mut app::App, code: KeyCode) -> Option<Action> {
     None
 }
 
-fn openclaw_available_model_refs(profile: &droidgear_core::openclaw::OpenClawProfile) -> Vec<String> {
+fn openclaw_available_model_refs(
+    profile: &droidgear_core::openclaw::OpenClawProfile,
+) -> Vec<String> {
     let mut refs: Vec<String> = Vec::new();
     for (provider_id, cfg) in &profile.providers {
         for m in &cfg.models {
@@ -2008,15 +2038,16 @@ fn openclaw_available_model_refs(profile: &droidgear_core::openclaw::OpenClawPro
             refs.push(format!("{provider_id}/{mid}"));
         }
     }
-    refs.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+    refs.sort_by_key(|a| a.to_lowercase());
     refs
 }
 
 fn openclaw_load_from_live_config(app: &mut app::App, profile_id: &str) -> anyhow::Result<()> {
     let live = droidgear_core::openclaw::read_openclaw_current_config_for_home(&app.home_dir)
         .map_err(anyhow::Error::msg)?;
-    let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
-        .map_err(anyhow::Error::msg)?;
+    let mut profile =
+        droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
+            .map_err(anyhow::Error::msg)?;
     profile.providers = live.providers;
     profile.default_model = live.default_model;
     droidgear_core::openclaw::save_openclaw_profile_for_home(&app.home_dir, profile)
@@ -2124,10 +2155,12 @@ fn handle_openclaw_profile_key(app: &mut app::App, code: KeyCode) -> Option<Acti
         KeyCode::Char('d') => match app.openclaw_detail_focus {
             app::OpenClawProfileFocus::Failover => {
                 let idx = app.openclaw_detail_failover_index;
-                let mut profile =
-                    droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
-                        .map_err(anyhow::Error::msg)
-                        .ok()?;
+                let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
+                    &app.home_dir,
+                    &profile_id,
+                )
+                .map_err(anyhow::Error::msg)
+                .ok()?;
                 let mut list = profile.failover_models.take().unwrap_or_default();
                 if idx < list.len() {
                     list.remove(idx);
@@ -2238,18 +2271,22 @@ fn handle_openclaw_provider_key(app: &mut app::App, code: KeyCode) -> Option<Act
         }
         KeyCode::Down => match app.openclaw_provider_focus {
             app::CodexDetailFocus::Fields => {
-                app.openclaw_provider_field_index = app.openclaw_provider_field_index.saturating_add(1)
+                app.openclaw_provider_field_index =
+                    app.openclaw_provider_field_index.saturating_add(1)
             }
             app::CodexDetailFocus::Providers => {
-                app.openclaw_provider_model_index = app.openclaw_provider_model_index.saturating_add(1)
+                app.openclaw_provider_model_index =
+                    app.openclaw_provider_model_index.saturating_add(1)
             }
         },
         KeyCode::Up => match app.openclaw_provider_focus {
             app::CodexDetailFocus::Fields => {
-                app.openclaw_provider_field_index = app.openclaw_provider_field_index.saturating_sub(1)
+                app.openclaw_provider_field_index =
+                    app.openclaw_provider_field_index.saturating_sub(1)
             }
             app::CodexDetailFocus::Providers => {
-                app.openclaw_provider_model_index = app.openclaw_provider_model_index.saturating_sub(1)
+                app.openclaw_provider_model_index =
+                    app.openclaw_provider_model_index.saturating_sub(1)
             }
         },
         KeyCode::Char('n') => {
@@ -2363,8 +2400,12 @@ fn handle_openclaw_model_key(app: &mut app::App, code: KeyCode) -> Option<Action
 
     match code {
         KeyCode::Esc | KeyCode::Char('q') => app.screen = app::Screen::OpenClawProvider,
-        KeyCode::Down => app.openclaw_model_field_index = app.openclaw_model_field_index.saturating_add(1),
-        KeyCode::Up => app.openclaw_model_field_index = app.openclaw_model_field_index.saturating_sub(1),
+        KeyCode::Down => {
+            app.openclaw_model_field_index = app.openclaw_model_field_index.saturating_add(1)
+        }
+        KeyCode::Up => {
+            app.openclaw_model_field_index = app.openclaw_model_field_index.saturating_sub(1)
+        }
         KeyCode::Enter | KeyCode::Char('e') => match app.openclaw_model_field_index {
             0 => {
                 app.modal = Some(app::Modal::Input {
@@ -2393,7 +2434,10 @@ fn handle_openclaw_model_key(app: &mut app::App, code: KeyCode) -> Option<Action
             2 => {
                 app.modal = Some(app::Modal::Input {
                     title: "Context window".to_string(),
-                    value: model.context_window.map(|v| v.to_string()).unwrap_or_default(),
+                    value: model
+                        .context_window
+                        .map(|v| v.to_string())
+                        .unwrap_or_default(),
                     is_secret: false,
                     action: app::InputAction::OpenClawSetModelContextWindow {
                         profile_id,
@@ -2415,21 +2459,31 @@ fn handle_openclaw_model_key(app: &mut app::App, code: KeyCode) -> Option<Action
                 });
             }
             4 => {
-                if let Err(e) = openclaw_toggle_model_reasoning(app, &profile_id, &provider_id, model_index) {
+                if let Err(e) =
+                    openclaw_toggle_model_reasoning(app, &profile_id, &provider_id, model_index)
+                {
                     app.set_toast(e.to_string(), true);
                 } else {
                     refresh_openclaw_detail(app);
                 }
             }
             5 => {
-                if let Err(e) = openclaw_toggle_model_input(app, &profile_id, &provider_id, model_index, "text") {
+                if let Err(e) =
+                    openclaw_toggle_model_input(app, &profile_id, &provider_id, model_index, "text")
+                {
                     app.set_toast(e.to_string(), true);
                 } else {
                     refresh_openclaw_detail(app);
                 }
             }
             6 => {
-                if let Err(e) = openclaw_toggle_model_input(app, &profile_id, &provider_id, model_index, "image") {
+                if let Err(e) = openclaw_toggle_model_input(
+                    app,
+                    &profile_id,
+                    &provider_id,
+                    model_index,
+                    "image",
+                ) {
                     app.set_toast(e.to_string(), true);
                 } else {
                     refresh_openclaw_detail(app);
@@ -2449,8 +2503,9 @@ fn openclaw_toggle_model_reasoning(
     provider_id: &str,
     model_index: usize,
 ) -> anyhow::Result<()> {
-    let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
-        .map_err(anyhow::Error::msg)?;
+    let mut profile =
+        droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
+            .map_err(anyhow::Error::msg)?;
     let Some(provider) = profile.providers.get_mut(provider_id) else {
         return Err(anyhow::Error::msg("Provider not found"));
     };
@@ -2470,8 +2525,9 @@ fn openclaw_toggle_model_input(
     model_index: usize,
     input_type: &str,
 ) -> anyhow::Result<()> {
-    let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
-        .map_err(anyhow::Error::msg)?;
+    let mut profile =
+        droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
+            .map_err(anyhow::Error::msg)?;
     let Some(provider) = profile.providers.get_mut(provider_id) else {
         return Err(anyhow::Error::msg("Provider not found"));
     };
@@ -2501,8 +2557,12 @@ fn handle_openclaw_helpers_key(app: &mut app::App, code: KeyCode) -> Option<Acti
 
     match code {
         KeyCode::Esc | KeyCode::Char('q') => app.screen = app::Screen::OpenClawProfile,
-        KeyCode::Down => app.openclaw_helpers_field_index = app.openclaw_helpers_field_index.saturating_add(1),
-        KeyCode::Up => app.openclaw_helpers_field_index = app.openclaw_helpers_field_index.saturating_sub(1),
+        KeyCode::Down => {
+            app.openclaw_helpers_field_index = app.openclaw_helpers_field_index.saturating_add(1)
+        }
+        KeyCode::Up => {
+            app.openclaw_helpers_field_index = app.openclaw_helpers_field_index.saturating_sub(1)
+        }
         KeyCode::Char('x') => {
             if let Err(e) = openclaw_reset_helpers(app, &profile_id) {
                 app.set_toast(e.to_string(), true);
@@ -2622,11 +2682,11 @@ fn openclaw_toggle_telegram_block_streaming(
     app: &mut app::App,
     profile_id: &str,
 ) -> anyhow::Result<()> {
-    let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
-        .map_err(anyhow::Error::msg)?;
-    let cfg = profile
-        .block_streaming_config
-        .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+    let mut profile =
+        droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
+            .map_err(anyhow::Error::msg)?;
+    let cfg = profile.block_streaming_config.get_or_insert_with(|| {
+        droidgear_core::openclaw::BlockStreamingConfig {
             block_streaming_default: Some("on".to_string()),
             block_streaming_break: Some("text_end".to_string()),
             block_streaming_chunk: Some(droidgear_core::openclaw::BlockStreamingChunk {
@@ -2640,13 +2700,14 @@ fn openclaw_toggle_telegram_block_streaming(
                 block_streaming: Some(true),
                 chunk_mode: Some("newline".to_string()),
             }),
-        });
-    let telegram = cfg
-        .telegram_channel
-        .get_or_insert_with(|| droidgear_core::openclaw::TelegramChannelConfig {
+        }
+    });
+    let telegram = cfg.telegram_channel.get_or_insert_with(|| {
+        droidgear_core::openclaw::TelegramChannelConfig {
             block_streaming: Some(true),
             chunk_mode: Some("newline".to_string()),
-        });
+        }
+    });
     let current = telegram.block_streaming.unwrap_or(true);
     telegram.block_streaming = Some(!current);
     droidgear_core::openclaw::save_openclaw_profile_for_home(&app.home_dir, profile)
@@ -2655,8 +2716,9 @@ fn openclaw_toggle_telegram_block_streaming(
 }
 
 fn openclaw_reset_helpers(app: &mut app::App, profile_id: &str) -> anyhow::Result<()> {
-    let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
-        .map_err(anyhow::Error::msg)?;
+    let mut profile =
+        droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, profile_id)
+            .map_err(anyhow::Error::msg)?;
     profile.block_streaming_config = Some(droidgear_core::openclaw::BlockStreamingConfig {
         block_streaming_default: Some("on".to_string()),
         block_streaming_break: Some("text_end".to_string()),
@@ -2713,7 +2775,9 @@ fn handle_specs_key(app: &mut app::App, code: KeyCode) -> Option<Action> {
         KeyCode::Char('r') => refresh_specs(app),
         KeyCode::Enter | KeyCode::Char('e') => {
             if let Some(s) = app.specs.get(app.specs_index) {
-                return Some(Action::EditSpec { path: s.path.clone() });
+                return Some(Action::EditSpec {
+                    path: s.path.clone(),
+                });
             }
         }
         KeyCode::Char('d') => {
@@ -2810,7 +2874,10 @@ fn channel_type_uses_api_key(channel_type: &droidgear_core::channel::ChannelType
     )
 }
 
-fn load_channel_auth_into_edit_state(app: &mut app::App, channel: &droidgear_core::channel::Channel) {
+fn load_channel_auth_into_edit_state(
+    app: &mut app::App,
+    channel: &droidgear_core::channel::Channel,
+) {
     app.channels_edit_username.clear();
     app.channels_edit_password.clear();
     app.channels_edit_api_key.clear();
@@ -2822,7 +2889,8 @@ fn load_channel_auth_into_edit_state(app: &mut app::App, channel: &droidgear_cor
             Err(e) => app.set_toast(e, true),
         }
     } else {
-        match droidgear_core::channel::get_channel_credentials_for_home(&app.home_dir, &channel.id) {
+        match droidgear_core::channel::get_channel_credentials_for_home(&app.home_dir, &channel.id)
+        {
             Ok(Some((username, password))) => {
                 app.channels_edit_username = username;
                 app.channels_edit_password = password;
@@ -2849,8 +2917,12 @@ fn handle_channels_edit_key(app: &mut app::App, code: KeyCode) -> Option<Action>
             app.channels_edit_api_key.clear();
             app.screen = app::Screen::Channels;
         }
-        KeyCode::Down => app.channels_edit_field_index = app.channels_edit_field_index.saturating_add(1),
-        KeyCode::Up => app.channels_edit_field_index = app.channels_edit_field_index.saturating_sub(1),
+        KeyCode::Down => {
+            app.channels_edit_field_index = app.channels_edit_field_index.saturating_add(1)
+        }
+        KeyCode::Up => {
+            app.channels_edit_field_index = app.channels_edit_field_index.saturating_sub(1)
+        }
         KeyCode::Char('s') => {
             let Some(mut channel) = app.channels_edit_draft.clone() else {
                 return None;
@@ -2873,9 +2945,11 @@ fn handle_channels_edit_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                     app.set_toast("API key is required", true);
                     return None;
                 }
-                if let Err(e) =
-                    droidgear_core::channel::save_channel_api_key_for_home(&app.home_dir, &channel.id, &api_key)
-                {
+                if let Err(e) = droidgear_core::channel::save_channel_api_key_for_home(
+                    &app.home_dir,
+                    &channel.id,
+                    &api_key,
+                ) {
                     app.set_toast(e, true);
                     return None;
                 }
@@ -2908,7 +2982,8 @@ fn handle_channels_edit_key(app: &mut app::App, code: KeyCode) -> Option<Action>
                 channels.push(channel.clone());
             }
 
-            if let Err(e) = droidgear_core::channel::save_channels_for_home(&app.home_dir, channels.clone())
+            if let Err(e) =
+                droidgear_core::channel::save_channels_for_home(&app.home_dir, channels.clone())
             {
                 app.set_toast(e, true);
                 return None;
@@ -3142,7 +3217,8 @@ where
 {
     let mut temp = NamedTempFile::new().context("create temp file")?;
     let content = serde_json::to_string_pretty(value).context("serialize JSON")?;
-    temp.write_all(content.as_bytes()).context("write temp file")?;
+    temp.write_all(content.as_bytes())
+        .context("write temp file")?;
     temp.flush().context("flush temp file")?;
 
     editor::open_in_editor(temp.path())?;
@@ -3293,10 +3369,9 @@ fn preview_opencode_apply(home_dir: &Path, profile_id: &str) -> anyhow::Result<S
     let temp = TempDir::new().context("create temp home")?;
     let temp_home = temp.path();
 
-    let config_file_name =
-        real_config_path
-            .file_name()
-            .unwrap_or(std::ffi::OsStr::new("opencode.json"));
+    let config_file_name = real_config_path
+        .file_name()
+        .unwrap_or(std::ffi::OsStr::new("opencode.json"));
     let auth_file_name = real_auth_path
         .file_name()
         .unwrap_or(std::ffi::OsStr::new("auth.json"));
@@ -3548,8 +3623,9 @@ fn run_select_action(
             let Some(selected) = selected else {
                 return Ok(());
             };
-            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &profile_id)
-                .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             if let Some(provider) = profile.providers.get_mut(&provider_id) {
                 provider.wire_api = Some(selected);
             } else {
@@ -3564,8 +3640,9 @@ fn run_select_action(
             profile_id,
             provider_id,
         } => {
-            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &profile_id)
-                .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             if let Some(provider) = profile.providers.get_mut(&provider_id) {
                 provider.model_reasoning_effort = match selected.as_deref() {
                     Some("(none)") | None => None,
@@ -3584,8 +3661,9 @@ fn run_select_action(
                 Some("replace") => "replace",
                 _ => "skip",
             };
-            let live = droidgear_core::opencode::read_opencode_current_config_for_home(&app.home_dir)
-                .map_err(anyhow::Error::msg)?;
+            let live =
+                droidgear_core::opencode::read_opencode_current_config_for_home(&app.home_dir)
+                    .map_err(anyhow::Error::msg)?;
 
             if live.providers.is_empty() {
                 return Err(anyhow::Error::msg("No providers found in live config"));
@@ -3652,11 +3730,9 @@ fn run_select_action(
             let Some(selected) = selected else {
                 return Ok(());
             };
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -3673,15 +3749,15 @@ fn run_select_action(
             let mut profile =
                 droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &id)
                     .map_err(anyhow::Error::msg)?;
-            let cfg = profile
-                .block_streaming_config
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+            let cfg = profile.block_streaming_config.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingConfig {
                     block_streaming_default: None,
                     block_streaming_break: None,
                     block_streaming_chunk: None,
                     block_streaming_coalesce: None,
                     telegram_channel: None,
-                });
+                }
+            });
             cfg.block_streaming_default = Some(selected);
             droidgear_core::openclaw::save_openclaw_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -3695,15 +3771,15 @@ fn run_select_action(
             let mut profile =
                 droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &id)
                     .map_err(anyhow::Error::msg)?;
-            let cfg = profile
-                .block_streaming_config
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+            let cfg = profile.block_streaming_config.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingConfig {
                     block_streaming_default: None,
                     block_streaming_break: None,
                     block_streaming_chunk: None,
                     block_streaming_coalesce: None,
                     telegram_channel: None,
-                });
+                }
+            });
             cfg.block_streaming_break = Some(selected);
             droidgear_core::openclaw::save_openclaw_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -3717,21 +3793,21 @@ fn run_select_action(
             let mut profile =
                 droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &id)
                     .map_err(anyhow::Error::msg)?;
-            let cfg = profile
-                .block_streaming_config
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+            let cfg = profile.block_streaming_config.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingConfig {
                     block_streaming_default: None,
                     block_streaming_break: None,
                     block_streaming_chunk: None,
                     block_streaming_coalesce: None,
                     telegram_channel: None,
-                });
-            let telegram = cfg
-                .telegram_channel
-                .get_or_insert_with(|| droidgear_core::openclaw::TelegramChannelConfig {
+                }
+            });
+            let telegram = cfg.telegram_channel.get_or_insert({
+                droidgear_core::openclaw::TelegramChannelConfig {
                     block_streaming: None,
                     chunk_mode: None,
-                });
+                }
+            });
             telegram.chunk_mode = Some(selected);
             droidgear_core::openclaw::save_openclaw_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -3865,12 +3941,8 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
                     .map_err(anyhow::Error::msg)?;
             profile.providers.remove(&provider_id);
             if profile.model_provider == provider_id {
-                let mut provider_ids = profile
-                    .providers
-                    .keys()
-                    .cloned()
-                    .collect::<Vec<String>>();
-                provider_ids.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                let mut provider_ids = profile.providers.keys().cloned().collect::<Vec<String>>();
+                provider_ids.sort_by_key(|a| a.to_lowercase());
                 profile.model_provider = provider_ids
                     .first()
                     .cloned()
@@ -3895,11 +3967,9 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
             profile_id,
             provider_id,
         } => {
-            let mut profile = droidgear_core::opencode::get_opencode_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::opencode::get_opencode_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             profile.providers.remove(&provider_id);
             profile.auth.remove(&provider_id);
             droidgear_core::opencode::save_opencode_profile_for_home(&app.home_dir, profile)
@@ -3911,11 +3981,9 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
             provider_id,
             model_id,
         } => {
-            let mut profile = droidgear_core::opencode::get_opencode_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::opencode::get_opencode_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -3944,11 +4012,9 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
             profile_id,
             provider_id,
         } => {
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             profile.providers.remove(&provider_id);
             if let Some(ref default_model) = profile.default_model {
                 if default_model.starts_with(&format!("{provider_id}/")) {
@@ -3970,11 +4036,9 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
             provider_id,
             model_index,
         } => {
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4016,8 +4080,9 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
             Ok(())
         }
         app::ConfirmAction::FactoryDeleteModel { index } => {
-            let mut models = droidgear_core::factory_settings::load_custom_models_for_home(&app.home_dir)
-                .map_err(anyhow::Error::msg)?;
+            let mut models =
+                droidgear_core::factory_settings::load_custom_models_for_home(&app.home_dir)
+                    .map_err(anyhow::Error::msg)?;
             if index < models.len() {
                 models.remove(index);
             }
@@ -4036,8 +4101,8 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
             Ok(())
         }
         app::ConfirmAction::ChannelDelete { id } => {
-            let mut channels =
-                droidgear_core::channel::load_channels_for_home(&app.home_dir).map_err(anyhow::Error::msg)?;
+            let mut channels = droidgear_core::channel::load_channels_for_home(&app.home_dir)
+                .map_err(anyhow::Error::msg)?;
             channels.retain(|c| c.id != id);
             droidgear_core::channel::save_channels_for_home(&app.home_dir, channels)
                 .map_err(anyhow::Error::msg)?;
@@ -4048,7 +4113,11 @@ fn run_confirm_action(app: &mut app::App, action: app::ConfirmAction) -> anyhow:
     }
 }
 
-fn run_input_action(app: &mut app::App, action: app::InputAction, value: String) -> anyhow::Result<()> {
+fn run_input_action(
+    app: &mut app::App,
+    action: app::InputAction,
+    value: String,
+) -> anyhow::Result<()> {
     let trimmed = value.trim();
     match action {
         app::InputAction::PathsSetKey { key } => {
@@ -4124,9 +4193,12 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Profile name is required"));
             }
-            let new_profile =
-                droidgear_core::codex::duplicate_codex_profile_for_home(&app.home_dir, &id, trimmed)
-                .map_err(anyhow::Error::msg)?;
+            let new_profile = droidgear_core::codex::duplicate_codex_profile_for_home(
+                &app.home_dir,
+                &id,
+                trimmed,
+            )
+            .map_err(anyhow::Error::msg)?;
             refresh_codex(app);
             if let Some(idx) = app
                 .codex_profiles
@@ -4141,9 +4213,8 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Profile name is required"));
             }
-            let mut profile =
-                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
-                    .map_err(anyhow::Error::msg)?;
+            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
+                .map_err(anyhow::Error::msg)?;
             profile.name = trimmed.to_string();
             droidgear_core::codex::save_codex_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -4151,9 +4222,8 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             Ok(())
         }
         app::InputAction::CodexSetProfileDescription { id } => {
-            let mut profile =
-                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
-                    .map_err(anyhow::Error::msg)?;
+            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
+                .map_err(anyhow::Error::msg)?;
             profile.description = (!trimmed.is_empty()).then(|| trimmed.to_string());
             droidgear_core::codex::save_codex_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -4161,9 +4231,8 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             Ok(())
         }
         app::InputAction::CodexSetProfileModel { id } => {
-            let mut profile =
-                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
-                    .map_err(anyhow::Error::msg)?;
+            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
+                .map_err(anyhow::Error::msg)?;
             profile.model = trimmed.to_string();
             droidgear_core::codex::save_codex_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -4171,9 +4240,8 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             Ok(())
         }
         app::InputAction::CodexSetProfileApiKey { id } => {
-            let mut profile =
-                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
-                    .map_err(anyhow::Error::msg)?;
+            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
+                .map_err(anyhow::Error::msg)?;
             profile.api_key = (!trimmed.is_empty()).then(|| trimmed.to_string());
             droidgear_core::codex::save_codex_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
@@ -4184,9 +4252,8 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Provider id is required"));
             }
-            let mut profile =
-                droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
-                    .map_err(anyhow::Error::msg)?;
+            let mut profile = droidgear_core::codex::get_codex_profile_for_home(&app.home_dir, &id)
+                .map_err(anyhow::Error::msg)?;
             if profile.providers.contains_key(trimmed) {
                 return Err(anyhow::Error::msg("Provider already exists"));
             }
@@ -4333,9 +4400,12 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Profile name is required"));
             }
-            let new_profile =
-                droidgear_core::opencode::duplicate_opencode_profile_for_home(&app.home_dir, &id, trimmed)
-                .map_err(anyhow::Error::msg)?;
+            let new_profile = droidgear_core::opencode::duplicate_opencode_profile_for_home(
+                &app.home_dir,
+                &id,
+                trimmed,
+            )
+            .map_err(anyhow::Error::msg)?;
             refresh_opencode(app);
             if let Some(idx) = app
                 .opencode_profiles
@@ -4690,9 +4760,12 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Profile name is required"));
             }
-            let new_profile =
-                droidgear_core::openclaw::duplicate_openclaw_profile_for_home(&app.home_dir, &id, trimmed)
-                .map_err(anyhow::Error::msg)?;
+            let new_profile = droidgear_core::openclaw::duplicate_openclaw_profile_for_home(
+                &app.home_dir,
+                &id,
+                trimmed,
+            )
+            .map_err(anyhow::Error::msg)?;
             refresh_openclaw(app);
             if let Some(idx) = app
                 .openclaw_profiles
@@ -4761,11 +4834,9 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             profile_id,
             provider_id,
         } => {
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4779,11 +4850,9 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             profile_id,
             provider_id,
         } => {
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4800,23 +4869,23 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Model id is required"));
             }
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
             let new_index = provider.models.len();
-            provider.models.push(droidgear_core::openclaw::OpenClawModel {
-                id: trimmed.to_string(),
-                name: None,
-                reasoning: true,
-                input: vec!["text".to_string(), "image".to_string()],
-                context_window: Some(200000),
-                max_tokens: Some(8192),
-            });
+            provider
+                .models
+                .push(droidgear_core::openclaw::OpenClawModel {
+                    id: trimmed.to_string(),
+                    name: None,
+                    reasoning: true,
+                    input: vec!["text".to_string(), "image".to_string()],
+                    context_window: Some(200000),
+                    max_tokens: Some(8192),
+                });
             droidgear_core::openclaw::save_openclaw_profile_for_home(&app.home_dir, profile)
                 .map_err(anyhow::Error::msg)?;
             app.openclaw_provider_id = Some(provider_id);
@@ -4834,11 +4903,9 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             if trimmed.is_empty() {
                 return Err(anyhow::Error::msg("Model id is required"));
             }
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4856,11 +4923,9 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             provider_id,
             model_index,
         } => {
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4887,11 +4952,9 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
                         .map_err(|_| anyhow::Error::msg("Invalid context window"))?,
                 )
             };
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4918,11 +4981,9 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
                         .map_err(|_| anyhow::Error::msg("Invalid max tokens"))?,
                 )
             };
-            let mut profile = droidgear_core::openclaw::get_openclaw_profile_for_home(
-                &app.home_dir,
-                &profile_id,
-            )
-            .map_err(anyhow::Error::msg)?;
+            let mut profile =
+                droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
+                    .map_err(anyhow::Error::msg)?;
             let Some(provider) = profile.providers.get_mut(&provider_id) else {
                 return Err(anyhow::Error::msg("Provider not found"));
             };
@@ -4948,21 +5009,21 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             let mut profile =
                 droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
                     .map_err(anyhow::Error::msg)?;
-            let cfg = profile
-                .block_streaming_config
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+            let cfg = profile.block_streaming_config.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingConfig {
                     block_streaming_default: None,
                     block_streaming_break: None,
                     block_streaming_chunk: None,
                     block_streaming_coalesce: None,
                     telegram_channel: None,
-                });
-            let chunk = cfg
-                .block_streaming_chunk
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingChunk {
+                }
+            });
+            let chunk = cfg.block_streaming_chunk.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingChunk {
                     min_chars: None,
                     max_chars: None,
-                });
+                }
+            });
             chunk.min_chars = min_chars;
             if chunk.min_chars.is_none() && chunk.max_chars.is_none() {
                 cfg.block_streaming_chunk = None;
@@ -4985,21 +5046,21 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             let mut profile =
                 droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
                     .map_err(anyhow::Error::msg)?;
-            let cfg = profile
-                .block_streaming_config
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+            let cfg = profile.block_streaming_config.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingConfig {
                     block_streaming_default: None,
                     block_streaming_break: None,
                     block_streaming_chunk: None,
                     block_streaming_coalesce: None,
                     telegram_channel: None,
-                });
-            let chunk = cfg
-                .block_streaming_chunk
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingChunk {
+                }
+            });
+            let chunk = cfg.block_streaming_chunk.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingChunk {
                     min_chars: None,
                     max_chars: None,
-                });
+                }
+            });
             chunk.max_chars = max_chars;
             if chunk.min_chars.is_none() && chunk.max_chars.is_none() {
                 cfg.block_streaming_chunk = None;
@@ -5022,18 +5083,18 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
             let mut profile =
                 droidgear_core::openclaw::get_openclaw_profile_for_home(&app.home_dir, &profile_id)
                     .map_err(anyhow::Error::msg)?;
-            let cfg = profile
-                .block_streaming_config
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingConfig {
+            let cfg = profile.block_streaming_config.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingConfig {
                     block_streaming_default: None,
                     block_streaming_break: None,
                     block_streaming_chunk: None,
                     block_streaming_coalesce: None,
                     telegram_channel: None,
-                });
-            let coalesce = cfg
-                .block_streaming_coalesce
-                .get_or_insert_with(|| droidgear_core::openclaw::BlockStreamingCoalesce { idle_ms: None });
+                }
+            });
+            let coalesce = cfg.block_streaming_coalesce.get_or_insert({
+                droidgear_core::openclaw::BlockStreamingCoalesce { idle_ms: None }
+            });
             coalesce.idle_ms = idle_ms;
             if coalesce.idle_ms.is_none() {
                 cfg.block_streaming_coalesce = None;
@@ -5202,7 +5263,7 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
                             return Ok(());
                         };
                         let mut keys: Vec<String> = env.keys().cloned().collect();
-                        keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                        keys.sort_by_key(|a| a.to_lowercase());
                         let Some(old_key) = keys.get(index).cloned() else {
                             return Ok(());
                         };
@@ -5217,7 +5278,7 @@ fn run_input_action(app: &mut app::App, action: app::InputAction, value: String)
                             return Ok(());
                         };
                         let mut keys: Vec<String> = headers.keys().cloned().collect();
-                        keys.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                        keys.sort_by_key(|a| a.to_lowercase());
                         let Some(old_key) = keys.get(index).cloned() else {
                             return Ok(());
                         };

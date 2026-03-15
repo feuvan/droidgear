@@ -78,13 +78,8 @@ pub async fn fetch_channel_tokens(
     username: String,
     password: String,
 ) -> Result<Vec<ChannelToken>, String> {
-    droidgear_core::channel::fetch_channel_tokens(
-        channel_type,
-        &base_url,
-        &username,
-        &password,
-    )
-    .await
+    droidgear_core::channel::fetch_channel_tokens(channel_type, &base_url, &username, &password)
+        .await
 }
 
 /// Fetches models using an API key (for quick model addition from channels)
@@ -95,7 +90,5 @@ pub async fn fetch_models_by_api_key(
     api_key: String,
     platform: Option<String>,
 ) -> Result<Vec<ModelInfo>, String> {
-    droidgear_core::channel::fetch_models_by_api_key(&base_url, &api_key, platform.as_deref())
-        .await
+    droidgear_core::channel::fetch_models_by_api_key(&base_url, &api_key, platform.as_deref()).await
 }
-

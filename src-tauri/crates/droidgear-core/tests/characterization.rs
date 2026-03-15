@@ -42,7 +42,10 @@ foo = "bar"
 name = "OpenAI"
 base_url = "https://api.openai.com/v1"
 "#;
-    write_file(&home.join(".codex").join("config.toml"), base_toml.trim_start());
+    write_file(
+        &home.join(".codex").join("config.toml"),
+        base_toml.trim_start(),
+    );
 
     // Profile file
     let mut providers = HashMap::new();
@@ -127,7 +130,10 @@ base_url = "https://api.openai.com/v1"
     // auth.json: provider-level api_key wins and is written as OPENAI_API_KEY
     let auth_after = read_to_string(&home.join(".codex").join("auth.json"));
     let auth_json: Value = serde_json::from_str(&auth_after).unwrap();
-    assert_eq!(auth_json.get("OPENAI_API_KEY").and_then(|v| v.as_str()), Some("sk-test"));
+    assert_eq!(
+        auth_json.get("OPENAI_API_KEY").and_then(|v| v.as_str()),
+        Some("sk-test")
+    );
 
     // active profile id
     let active = read_to_string(
@@ -186,10 +192,7 @@ fn opencode_apply_prefers_jsonc_and_merges_provider_and_auth() {
         r#"{ "provider": { "keep": { "name": "Keep" } } }"#,
     );
     write_file(
-        &home
-            .join(".config")
-            .join("opencode")
-            .join("opencode.jsonc"),
+        &home.join(".config").join("opencode").join("opencode.jsonc"),
         r#"// comment
 { "provider": { "openai": { "name": "Old" } } }"#,
     );
@@ -217,7 +220,10 @@ fn opencode_apply_prefers_jsonc_and_merges_provider_and_auth() {
     // opencode.jsonc updated
     let jsonc_after = read_to_string(&home.join(".config").join("opencode").join("opencode.jsonc"));
     let jsonc_after_v: Value = serde_json::from_str(&jsonc_after).unwrap();
-    let provider_obj = jsonc_after_v.get("provider").and_then(|v| v.as_object()).unwrap();
+    let provider_obj = jsonc_after_v
+        .get("provider")
+        .and_then(|v| v.as_object())
+        .unwrap();
     assert!(provider_obj.contains_key("openai"));
     assert!(provider_obj.contains_key("new"));
 
@@ -230,7 +236,10 @@ fn opencode_apply_prefers_jsonc_and_merges_provider_and_auth() {
             .join("auth.jsonc"),
     );
     let auth_after_v: Value = serde_json::from_str(&auth_after).unwrap();
-    assert_eq!(auth_after_v.get("existing").and_then(|v| v.as_i64()), Some(1));
+    assert_eq!(
+        auth_after_v.get("existing").and_then(|v| v.as_i64()),
+        Some(1)
+    );
     assert!(auth_after_v.get("openai").is_some());
 
     // active profile id
@@ -352,7 +361,10 @@ fn openclaw_apply_replaces_models_providers_and_chunk_object() {
         .and_then(|v| v.get("model"))
         .and_then(|v| v.as_object())
         .unwrap();
-    assert_eq!(model_obj.get("primary").and_then(|v| v.as_str()), Some("new/m1"));
+    assert_eq!(
+        model_obj.get("primary").and_then(|v| v.as_str()),
+        Some("new/m1")
+    );
     assert!(!model_obj.contains_key("something"));
 
     // blockStreamingChunk replaced: minChars removed, maxChars updated.
@@ -362,7 +374,10 @@ fn openclaw_apply_replaces_models_providers_and_chunk_object() {
         .and_then(|v| v.get("blockStreamingChunk"))
         .and_then(|v| v.as_object())
         .unwrap();
-    assert_eq!(chunk_obj.get("maxChars").and_then(|v| v.as_i64()), Some(100));
+    assert_eq!(
+        chunk_obj.get("maxChars").and_then(|v| v.as_i64()),
+        Some(100)
+    );
     assert!(chunk_obj.get("minChars").is_none());
 
     // active profile id
@@ -452,4 +467,3 @@ fn mcp_toggle_missing_server_returns_error() {
     let err = mcp::toggle_mcp_server_for_home(home, "missing", true).unwrap_err();
     assert_eq!(err, "Server not found: missing");
 }
-

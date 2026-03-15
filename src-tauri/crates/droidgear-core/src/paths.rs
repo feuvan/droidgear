@@ -87,7 +87,8 @@ fn read_droidgear_settings_from_path(path: &Path) -> Result<Value, String> {
     if !path.exists() {
         return Ok(serde_json::json!({}));
     }
-    let content = std::fs::read_to_string(path).map_err(|e| format!("Failed to read settings: {e}"))?;
+    let content =
+        std::fs::read_to_string(path).map_err(|e| format!("Failed to read settings: {e}"))?;
     if content.trim().is_empty() {
         return Ok(serde_json::json!({}));
     }
@@ -139,7 +140,9 @@ pub fn get_default_paths_for_home(home_dir: &Path) -> Result<EffectivePaths, Str
     Ok(EffectivePaths {
         factory: EffectivePath {
             key: "factory".to_string(),
-            path: default_factory_home_for_home(home_dir)?.to_string_lossy().to_string(),
+            path: default_factory_home_for_home(home_dir)?
+                .to_string_lossy()
+                .to_string(),
             is_default: true,
         },
         opencode: EffectivePath {
@@ -158,12 +161,16 @@ pub fn get_default_paths_for_home(home_dir: &Path) -> Result<EffectivePaths, Str
         },
         codex: EffectivePath {
             key: "codex".to_string(),
-            path: default_codex_home_for_home(home_dir)?.to_string_lossy().to_string(),
+            path: default_codex_home_for_home(home_dir)?
+                .to_string_lossy()
+                .to_string(),
             is_default: true,
         },
         openclaw: EffectivePath {
             key: "openclaw".to_string(),
-            path: default_openclaw_home_for_home(home_dir)?.to_string_lossy().to_string(),
+            path: default_openclaw_home_for_home(home_dir)?
+                .to_string_lossy()
+                .to_string(),
             is_default: true,
         },
     })

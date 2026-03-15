@@ -192,7 +192,11 @@ pub fn delete_mcp_server(name: &str) -> Result<(), String> {
     delete_mcp_server_for_home(&system_home_dir()?, name)
 }
 
-pub fn toggle_mcp_server_for_home(home_dir: &Path, name: &str, disabled: bool) -> Result<(), String> {
+pub fn toggle_mcp_server_for_home(
+    home_dir: &Path,
+    name: &str,
+    disabled: bool,
+) -> Result<(), String> {
     let mut config = read_mcp_file_for_home(home_dir)?;
 
     if let Some(obj) = config.as_object_mut() {
@@ -215,4 +219,3 @@ pub fn toggle_mcp_server_for_home(home_dir: &Path, name: &str, disabled: bool) -
 pub fn toggle_mcp_server(name: &str, disabled: bool) -> Result<(), String> {
     toggle_mcp_server_for_home(&system_home_dir()?, name, disabled)
 }
-

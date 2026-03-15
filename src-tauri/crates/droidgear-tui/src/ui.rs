@@ -83,7 +83,9 @@ impl Theme {
     }
 
     fn success_style(&self) -> Style {
-        Style::default().fg(self.success).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.success)
+            .add_modifier(Modifier::BOLD)
     }
 
     fn error_style(&self) -> Style {
@@ -91,7 +93,9 @@ impl Theme {
     }
 
     fn warning_style(&self) -> Style {
-        Style::default().fg(self.warning).add_modifier(Modifier::BOLD)
+        Style::default()
+            .fg(self.warning)
+            .add_modifier(Modifier::BOLD)
     }
 
     fn modal_style(&self) -> Style {
@@ -215,9 +219,17 @@ fn draw_paths(frame: &mut Frame, app: &app::App, area: Rect) {
         ];
         for (i, p) in entries.iter().enumerate() {
             let selected = i == app.paths_index;
-            let style = if selected { t.selected_style() } else { Style::default() };
+            let style = if selected {
+                t.selected_style()
+            } else {
+                Style::default()
+            };
             let default_tag = if p.is_default { "default" } else { "custom" };
-            let tag_style = if selected { t.selected_style() } else { t.dim_style() };
+            let tag_style = if selected {
+                t.selected_style()
+            } else {
+                t.dim_style()
+            };
             lines.push(Line::from(vec![
                 Span::styled(format!("{:>10}: ", p.key), style),
                 Span::styled(p.path.clone(), style),
@@ -254,11 +266,10 @@ fn draw_factory(frame: &mut Frame, app: &app::App, area: Rect) {
             .as_deref()
             .filter(|s| !s.trim().is_empty())
             .unwrap_or(&m.model);
-        let id = m
-            .id
-            .as_deref()
-            .filter(|s| !s.trim().is_empty())
-            .unwrap_or("-");
+        let id =
+            m.id.as_deref()
+                .filter(|s| !s.trim().is_empty())
+                .unwrap_or("-");
         let is_default = app
             .factory_default_model_id
             .as_deref()
@@ -397,7 +408,11 @@ fn draw_mcp(frame: &mut Frame, app: &app::App, area: Rect) {
         if selected {
             style = t.selected_style();
         }
-        let status = if s.config.disabled { "disabled" } else { "enabled" };
+        let status = if s.config.disabled {
+            "disabled"
+        } else {
+            "enabled"
+        };
         items.push(ListItem::new(Line::from(Span::styled(
             format!("{}  [{status}]", s.name),
             style,
@@ -449,29 +464,14 @@ fn draw_mcp_server(frame: &mut Frame, app: &app::App, area: Rect) {
 
     match server.config.server_type {
         droidgear_core::mcp::McpServerType::Stdio => {
-            let args_count = server
-                .config
-                .args
-                .as_ref()
-                .map(|v| v.len())
-                .unwrap_or(0);
-            let env_count = server
-                .config
-                .env
-                .as_ref()
-                .map(|m| m.len())
-                .unwrap_or(0);
+            let args_count = server.config.args.as_ref().map(|v| v.len()).unwrap_or(0);
+            let env_count = server.config.env.as_ref().map(|m| m.len()).unwrap_or(0);
             fields.push(("Command", server.config.command.clone().unwrap_or_default()));
             fields.push(("Args", format!("{args_count}")));
             fields.push(("Env", format!("{env_count}")));
         }
         droidgear_core::mcp::McpServerType::Http => {
-            let headers_count = server
-                .config
-                .headers
-                .as_ref()
-                .map(|m| m.len())
-                .unwrap_or(0);
+            let headers_count = server.config.headers.as_ref().map(|m| m.len()).unwrap_or(0);
             fields.push(("URL", server.config.url.clone().unwrap_or_default()));
             fields.push(("Headers", format!("{headers_count}")));
         }
@@ -672,7 +672,10 @@ fn draw_openclaw_profile(frame: &mut Frame, app: &app::App, area: Rect) {
         ("Name", profile.name.clone()),
         (
             "Description",
-            profile.description.clone().unwrap_or_else(|| "".to_string()),
+            profile
+                .description
+                .clone()
+                .unwrap_or_else(|| "".to_string()),
         ),
         (
             "Default Model",
@@ -696,7 +699,8 @@ fn draw_openclaw_profile(frame: &mut Frame, app: &app::App, area: Rect) {
             style,
         ))));
     }
-    let field_list = List::new(field_items).block(block(format!("OpenClaw Profile: {}", profile.name)));
+    let field_list =
+        List::new(field_items).block(block(format!("OpenClaw Profile: {}", profile.name)));
     frame.render_widget(field_list, chunks[0]);
 
     let failovers = profile.failover_models.as_deref().unwrap_or(&[]);
@@ -878,14 +882,23 @@ fn draw_openclaw_model(frame: &mut Frame, app: &app::App, area: Rect) {
         ("Name", model.name.clone().unwrap_or_else(|| "".to_string())),
         (
             "Context Window",
-            model.context_window.map(|v| v.to_string()).unwrap_or_default(),
+            model
+                .context_window
+                .map(|v| v.to_string())
+                .unwrap_or_default(),
         ),
         (
             "Max Tokens",
             model.max_tokens.map(|v| v.to_string()).unwrap_or_default(),
         ),
-        ("Reasoning", if model.reasoning { "on" } else { "off" }.to_string()),
-        ("Input Text", if input_text { "on" } else { "off" }.to_string()),
+        (
+            "Reasoning",
+            if model.reasoning { "on" } else { "off" }.to_string(),
+        ),
+        (
+            "Input Text",
+            if input_text { "on" } else { "off" }.to_string(),
+        ),
         (
             "Input Image",
             if input_image { "on" } else { "off" }.to_string(),
@@ -1027,7 +1040,10 @@ fn draw_opencode_profile(frame: &mut Frame, app: &app::App, area: Rect) {
         ("Name", profile.name.clone()),
         (
             "Description",
-            profile.description.clone().unwrap_or_else(|| "".to_string()),
+            profile
+                .description
+                .clone()
+                .unwrap_or_else(|| "".to_string()),
         ),
     ];
 
@@ -1160,7 +1176,8 @@ fn draw_opencode_provider(frame: &mut Frame, app: &app::App, area: Rect) {
             style,
         ))));
     }
-    let fields_list = List::new(field_items).block(block(format!("OpenCode Provider: {provider_id}")));
+    let fields_list =
+        List::new(field_items).block(block(format!("OpenCode Provider: {provider_id}")));
     frame.render_widget(fields_list, chunks[0]);
 
     let mut model_items: Vec<ListItem> = Vec::new();
@@ -1310,7 +1327,10 @@ fn draw_codex_profile(frame: &mut Frame, app: &app::App, area: Rect) {
         ("Name", profile.name.clone()),
         (
             "Description",
-            profile.description.clone().unwrap_or_else(|| "".to_string()),
+            profile
+                .description
+                .clone()
+                .unwrap_or_else(|| "".to_string()),
         ),
         ("Model Provider", profile.model_provider.clone()),
         ("Model", profile.model.clone()),
@@ -1327,7 +1347,8 @@ fn draw_codex_profile(frame: &mut Frame, app: &app::App, area: Rect) {
 
     for (i, (label, value)) in fields.into_iter().enumerate() {
         let mut style = Style::default();
-        if app.codex_detail_focus == app::CodexDetailFocus::Fields && i == app.codex_detail_field_index
+        if app.codex_detail_focus == app::CodexDetailFocus::Fields
+            && i == app.codex_detail_field_index
         {
             style = t.selected_style();
         }
@@ -1350,7 +1371,11 @@ fn draw_codex_profile(frame: &mut Frame, app: &app::App, area: Rect) {
         {
             style = t.selected_style();
         }
-        let active_tag = if pid == &profile.model_provider { " *" } else { "" };
+        let active_tag = if pid == &profile.model_provider {
+            " *"
+        } else {
+            ""
+        };
         provider_items.push(ListItem::new(Line::from(Span::styled(
             format!("{pid}{active_tag}"),
             style,
@@ -1400,20 +1425,26 @@ fn draw_codex_provider(frame: &mut Frame, app: &app::App, area: Rect) {
         .split(area);
 
     let wire_api = config.wire_api.as_deref().unwrap_or("responses");
-    let effort = config
-        .model_reasoning_effort
+    let effort = config.model_reasoning_effort.as_deref().unwrap_or("(none)");
+    let api_key_set = config
+        .api_key
         .as_deref()
-        .unwrap_or("(none)");
-    let api_key_set = config.api_key.as_deref().is_some_and(|k| !k.trim().is_empty());
+        .is_some_and(|k| !k.trim().is_empty());
 
     let fields: Vec<(&str, String)> = vec![
-        ("Name", config.name.clone().unwrap_or_else(|| "".to_string())),
+        (
+            "Name",
+            config.name.clone().unwrap_or_else(|| "".to_string()),
+        ),
         (
             "Base URL",
             config.base_url.clone().unwrap_or_else(|| "".to_string()),
         ),
         ("Wire API", wire_api.to_string()),
-        ("Model", config.model.clone().unwrap_or_else(|| "".to_string())),
+        (
+            "Model",
+            config.model.clone().unwrap_or_else(|| "".to_string()),
+        ),
         ("Reasoning Effort", effort.to_string()),
         (
             "API Key",
@@ -1494,7 +1525,10 @@ fn draw_specs(frame: &mut Frame, app: &app::App, area: Rect) {
         if selected {
             style = t.selected_style();
         }
-        items.push(ListItem::new(Line::from(Span::styled(s.name.clone(), style))));
+        items.push(ListItem::new(Line::from(Span::styled(
+            s.name.clone(),
+            style,
+        ))));
     }
     if items.is_empty() {
         items.push(ListItem::new(Line::from("No specs")));
@@ -1663,7 +1697,11 @@ fn draw_profile_list<'a>(
         if selected {
             style = t.selected_style();
         }
-        let active_tag = active_id.is_some_and(|a| a == id).then_some(" *").unwrap_or("");
+        let active_tag = if active_id.is_some_and(|a| a == id) {
+            " *"
+        } else {
+            ""
+        };
         items.push(ListItem::new(Line::from(Span::styled(
             format!("{name}{active_tag}"),
             style,

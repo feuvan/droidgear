@@ -31,4 +31,3 @@ pub async fn delete_mcp_server(name: String) -> Result<(), String> {
 pub async fn toggle_mcp_server(name: String, disabled: bool) -> Result<(), String> {
     droidgear_core::mcp::toggle_mcp_server(&name, disabled)
 }
-

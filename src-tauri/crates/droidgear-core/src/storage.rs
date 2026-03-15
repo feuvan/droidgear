@@ -16,4 +16,3 @@ pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<(), String> {
     })?;
     Ok(())
 }
-

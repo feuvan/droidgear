@@ -6,7 +6,11 @@ pub fn editor_command() -> String {
     std::env::var("VISUAL")
         .ok()
         .filter(|s| !s.trim().is_empty())
-        .or_else(|| std::env::var("EDITOR").ok().filter(|s| !s.trim().is_empty()))
+        .or_else(|| {
+            std::env::var("EDITOR")
+                .ok()
+                .filter(|s| !s.trim().is_empty())
+        })
         .unwrap_or_else(|| "vi".to_string())
 }
 
@@ -21,7 +25,9 @@ pub fn open_in_editor(path: &Path) -> anyhow::Result<()> {
     }
     cmd.arg(path);
 
-    let status = cmd.status().with_context(|| format!("Failed to run editor: {editor}"))?;
+    let status = cmd
+        .status()
+        .with_context(|| format!("Failed to run editor: {editor}"))?;
     if status.success() {
         Ok(())
     } else {
@@ -47,7 +53,9 @@ pub fn open_in_pager(path: &Path) -> anyhow::Result<()> {
     }
     cmd.arg(path);
 
-    let status = cmd.status().with_context(|| format!("Failed to run pager: {pager}"))?;
+    let status = cmd
+        .status()
+        .with_context(|| format!("Failed to run pager: {pager}"))?;
     if status.success() {
         Ok(())
     } else {

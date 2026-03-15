@@ -63,4 +63,3 @@ pub async fn build_wsl_path(
 ) -> Result<String, String> {
     droidgear_core::paths::build_wsl_path(&distro, &username, &config_key)
 }
-

@@ -104,4 +104,3 @@ pub async fn stop_sessions_watcher(app: AppHandle) -> Result<(), String> {
 
     Ok(())
 }
-

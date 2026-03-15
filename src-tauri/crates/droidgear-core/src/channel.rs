@@ -112,31 +112,40 @@ fn auth_file_path_for_home(home_dir: &Path, channel_id: &str) -> PathBuf {
 // ============================================================================
 
 fn read_channels_from_file(path: &Path) -> Result<Vec<Channel>, String> {
-    let content = fs::read_to_string(path).map_err(|e| format!("Failed to read channels file: {e}"))?;
-    let channels: Vec<Channel> =
-        serde_json::from_str(&content).map_err(|e| format!("Failed to parse channels file: {e}"))?;
+    let content =
+        fs::read_to_string(path).map_err(|e| format!("Failed to read channels file: {e}"))?;
+    let channels: Vec<Channel> = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse channels file: {e}"))?;
     Ok(channels)
 }
 
 fn write_channels_to_file(path: &Path, channels: &[Channel]) -> Result<(), String> {
-    let content =
-        serde_json::to_string_pretty(channels).map_err(|e| format!("Failed to serialize channels: {e}"))?;
+    let content = serde_json::to_string_pretty(channels)
+        .map_err(|e| format!("Failed to serialize channels: {e}"))?;
     fs::write(path, content).map_err(|e| format!("Failed to write channels file: {e}"))?;
     Ok(())
 }
 
-fn read_channel_auth_for_home(home_dir: &Path, channel_id: &str) -> Result<Option<ChannelAuth>, String> {
+fn read_channel_auth_for_home(
+    home_dir: &Path,
+    channel_id: &str,
+) -> Result<Option<ChannelAuth>, String> {
     let path = auth_file_path_for_home(home_dir, channel_id);
     if !path.exists() {
         return Ok(None);
     }
-    let content = fs::read_to_string(&path).map_err(|e| format!("Failed to read auth file: {e}"))?;
+    let content =
+        fs::read_to_string(&path).map_err(|e| format!("Failed to read auth file: {e}"))?;
     let auth: ChannelAuth =
         serde_json::from_str(&content).map_err(|e| format!("Failed to parse auth file: {e}"))?;
     Ok(Some(auth))
 }
 
-fn write_channel_auth_for_home(home_dir: &Path, channel_id: &str, auth: &ChannelAuth) -> Result<(), String> {
+fn write_channel_auth_for_home(
+    home_dir: &Path,
+    channel_id: &str,
+    auth: &ChannelAuth,
+) -> Result<(), String> {
     let dir = auth_dir_for_home(home_dir);
     fs::create_dir_all(&dir).map_err(|e| format!("Failed to create auth directory: {e}"))?;
     let path = auth_file_path_for_home(home_dir, channel_id);
@@ -227,7 +236,11 @@ pub fn save_channel_credentials_for_home(
     write_channel_auth_for_home(home_dir, channel_id, &auth)
 }
 
-pub fn save_channel_credentials(channel_id: &str, username: &str, password: &str) -> Result<(), String> {
+pub fn save_channel_credentials(
+    channel_id: &str,
+    username: &str,
+    password: &str,
+) -> Result<(), String> {
     save_channel_credentials_for_home(&home_dir()?, channel_id, username, password)
 }
 
@@ -245,7 +258,11 @@ pub fn get_channel_credentials(channel_id: &str) -> Result<Option<(String, Strin
     get_channel_credentials_for_home(&home_dir()?, channel_id)
 }
 
-pub fn save_channel_api_key_for_home(home_dir: &Path, channel_id: &str, api_key: &str) -> Result<(), String> {
+pub fn save_channel_api_key_for_home(
+    home_dir: &Path,
+    channel_id: &str,
+    api_key: &str,
+) -> Result<(), String> {
     let auth = ChannelAuth::ApiKey {
         api_key: api_key.to_string(),
     };
@@ -256,7 +273,10 @@ pub fn save_channel_api_key(channel_id: &str, api_key: &str) -> Result<(), Strin
     save_channel_api_key_for_home(&home_dir()?, channel_id, api_key)
 }
 
-pub fn get_channel_api_key_for_home(home_dir: &Path, channel_id: &str) -> Result<Option<String>, String> {
+pub fn get_channel_api_key_for_home(
+    home_dir: &Path,
+    channel_id: &str,
+) -> Result<Option<String>, String> {
     match read_channel_auth_for_home(home_dir, channel_id)? {
         Some(ChannelAuth::ApiKey { api_key }) => Ok(Some(api_key)),
         _ => Ok(None),
@@ -267,7 +287,10 @@ pub fn get_channel_api_key(channel_id: &str) -> Result<Option<String>, String> {
     get_channel_api_key_for_home(&home_dir()?, channel_id)
 }
 
-pub fn delete_channel_credentials_for_home(home_dir: &Path, channel_id: &str) -> Result<(), String> {
+pub fn delete_channel_credentials_for_home(
+    home_dir: &Path,
+    channel_id: &str,
+) -> Result<(), String> {
     delete_channel_auth_for_home(home_dir, channel_id)
 }
 
@@ -341,21 +364,27 @@ pub async fn fetch_channel_tokens(
     match channel_type {
         ChannelType::NewApi => fetch_new_api_tokens(base_url, username, password).await,
         ChannelType::Sub2Api => fetch_sub2api_tokens(base_url, username, password).await,
-        ChannelType::CliProxyApi | ChannelType::Ollama | ChannelType::General => Ok(vec![ChannelToken {
-            id: 0.0,
-            name: "API Key".to_string(),
-            key: password.to_string(),
-            status: 1,
-            remain_quota: 0.0,
-            used_quota: 0.0,
-            unlimited_quota: true,
-            platform: None,
-            group_name: None,
-        }]),
+        ChannelType::CliProxyApi | ChannelType::Ollama | ChannelType::General => {
+            Ok(vec![ChannelToken {
+                id: 0.0,
+                name: "API Key".to_string(),
+                key: password.to_string(),
+                status: 1,
+                remain_quota: 0.0,
+                used_quota: 0.0,
+                unlimited_quota: true,
+                platform: None,
+                group_name: None,
+            }])
+        }
     }
 }
 
-async fn fetch_new_api_tokens(base_url: &str, username: &str, password: &str) -> Result<Vec<ChannelToken>, String> {
+async fn fetch_new_api_tokens(
+    base_url: &str,
+    username: &str,
+    password: &str,
+) -> Result<Vec<ChannelToken>, String> {
     let client = reqwest::Client::builder()
         .cookie_store(true)
         .build()
@@ -467,7 +496,11 @@ async fn fetch_new_api_tokens(base_url: &str, username: &str, password: &str) ->
     Ok(all_tokens)
 }
 
-async fn fetch_sub2api_tokens(base_url: &str, email: &str, password: &str) -> Result<Vec<ChannelToken>, String> {
+async fn fetch_sub2api_tokens(
+    base_url: &str,
+    email: &str,
+    password: &str,
+) -> Result<Vec<ChannelToken>, String> {
     let client = reqwest::Client::new();
     let base = base_url.trim_end_matches('/');
 
@@ -545,7 +578,10 @@ async fn fetch_sub2api_tokens(base_url: &str, email: &str, password: &str) -> Re
         let keys_response = client
             .get(&keys_url)
             .header("Authorization", format!("Bearer {access_token}"))
-            .query(&[("page", page.to_string()), ("page_size", page_size.to_string())])
+            .query(&[
+                ("page", page.to_string()),
+                ("page_size", page_size.to_string()),
+            ])
             .send()
             .await
             .map_err(|e| format!("Failed to fetch keys: {e}"))?;
@@ -743,4 +779,3 @@ fn parse_gemini_models(data: &Value) -> Vec<ModelInfo> {
         })
         .unwrap_or_default()
 }
-

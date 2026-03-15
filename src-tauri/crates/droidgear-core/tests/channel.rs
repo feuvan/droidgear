@@ -99,4 +99,3 @@ fn channels_load_migrates_from_factory_settings_when_missing() {
     let migrated_path = home.join(".droidgear").join("channels.json");
     assert!(migrated_path.exists());
 }
-

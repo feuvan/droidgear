@@ -86,6 +86,67 @@ xattr -cr /Applications/DroidGear.app
 - **退出保护** - 有未保存更改时关闭会提示警告
 - **跨平台** - 支持 macOS、Windows 和 Linux
 
+## TUI 版本（无头终端）
+
+DroidGear TUI 是专为 SSH 和无桌面环境设计的终端界面版本，与桌面版共享相同的配置文件和核心功能。
+
+### 安装
+
+从 [Releases](https://github.com/sunshow/droid-switch/releases) 下载对应平台的 `droidgear-tui` 二进制文件：
+
+- macOS (Apple Silicon): `droidgear-tui-*-aarch64-apple-darwin.tar.gz`
+- macOS (Intel): `droidgear-tui-*-x86_64-apple-darwin.tar.gz`
+- Linux: `droidgear-tui-*-x86_64-unknown-linux-gnu.tar.gz`
+- Windows: `droidgear-tui-*-x86_64-pc-windows-msvc.zip`
+
+解压后将二进制文件放到 PATH 路径下（如 `/usr/local/bin`）。
+
+### 运行
+
+```bash
+# 使用默认配置（读取 ~/.factory 和 ~/.droidgear）
+droidgear-tui
+
+# 指定自定义 HOME 路径（容器/测试场景）
+droidgear-tui --home /path/to/custom/home
+```
+
+### 功能支持
+
+TUI 版本支持以下配置管理功能：
+
+- **Factory 配置**：自定义模型管理、默认模型设置
+- **MCP 服务器**：增删改查、启用/禁用、导入导出
+- **Codex Profile**：配置文件管理、变更预览、一键应用
+- **OpenCode Profile**：Provider/Auth 配置管理
+- **OpenClaw Profile**：配置管理与应用
+- **Sessions**：会话浏览与管理
+- **Paths**：路径覆盖配置（适配服务器环境）
+- **Channels**：代理平台与凭据管理
+
+### 基本操作
+
+- `↑/↓` 或 `j/k`：上下移动
+- `Enter`：进入/确认
+- `Esc`：返回/取消
+- `Tab`：切换焦点区域
+- `Ctrl+S`：预览变更（编辑页面）
+- `y/N`：确认应用变更
+- `q`：退出（主界面）
+
+### 配置文件
+
+TUI 版本与桌面版共享配置文件：
+
+- Factory 配置：`~/.factory/settings.json`
+- MCP 配置：`~/.factory/mcp.json`
+- DroidGear 配置：`~/.droidgear/`
+- Codex 配置：`~/.codex/`
+- OpenCode 配置：`~/.config/opencode/`
+- OpenClaw 配置：`~/.openclaw/`
+
+详细设计文档见 [docs/developer/tui-design.md](docs/developer/tui-design.md)
+
 ## 配置说明
 
 DroidGear 读写 `~/.factory/settings.json` 文件：

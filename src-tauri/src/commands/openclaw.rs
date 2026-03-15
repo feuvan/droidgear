@@ -39,7 +39,10 @@ pub async fn delete_openclaw_profile(id: String) -> Result<(), String> {
 /// Duplicate a profile
 #[tauri::command]
 #[specta::specta]
-pub async fn duplicate_openclaw_profile(id: String, new_name: String) -> Result<OpenClawProfile, String> {
+pub async fn duplicate_openclaw_profile(
+    id: String,
+    new_name: String,
+) -> Result<OpenClawProfile, String> {
     droidgear_core::openclaw::duplicate_openclaw_profile(&id, &new_name)
 }
 
@@ -77,4 +80,3 @@ pub async fn get_openclaw_config_status() -> Result<OpenClawConfigStatus, String
 pub async fn read_openclaw_current_config() -> Result<OpenClawCurrentConfig, String> {
     droidgear_core::openclaw::read_openclaw_current_config()
 }
-

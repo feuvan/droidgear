@@ -39,4 +39,3 @@ pub fn read_json_value_file_or_empty_object(path: &Path) -> Value {
     }
     serde_json::from_str(&s).unwrap_or(serde_json::json!({}))
 }
-

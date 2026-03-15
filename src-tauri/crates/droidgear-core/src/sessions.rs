@@ -173,7 +173,10 @@ pub fn list_session_projects() -> Result<Vec<SessionProject>, String> {
     list_session_projects_for_home(&system_home_dir()?)
 }
 
-pub fn list_sessions_for_home(home_dir: &Path, project: Option<&str>) -> Result<Vec<SessionSummary>, String> {
+pub fn list_sessions_for_home(
+    home_dir: &Path,
+    project: Option<&str>,
+) -> Result<Vec<SessionSummary>, String> {
     let sessions_dir = sessions_dir_for_home(home_dir)?;
 
     if !sessions_dir.exists() {
@@ -301,7 +304,10 @@ pub fn list_sessions(project: Option<&str>) -> Result<Vec<SessionSummary>, Strin
     list_sessions_for_home(&system_home_dir()?, project)
 }
 
-pub fn get_session_detail_for_home(_home_dir: &Path, session_path: &str) -> Result<SessionDetail, String> {
+pub fn get_session_detail_for_home(
+    _home_dir: &Path,
+    session_path: &str,
+) -> Result<SessionDetail, String> {
     let jsonl_path = PathBuf::from(format!("{session_path}.jsonl"));
     let settings_path = PathBuf::from(format!("{session_path}.settings.json"));
 
@@ -327,7 +333,9 @@ pub fn get_session_detail_for_home(_home_dir: &Path, session_path: &str) -> Resu
                     cache_creation_tokens: json["tokenUsage"]["cacheCreationTokens"]
                         .as_f64()
                         .unwrap_or(0.0),
-                    cache_read_tokens: json["tokenUsage"]["cacheReadTokens"].as_f64().unwrap_or(0.0),
+                    cache_read_tokens: json["tokenUsage"]["cacheReadTokens"]
+                        .as_f64()
+                        .unwrap_or(0.0),
                     thinking_tokens: json["tokenUsage"]["thinkingTokens"].as_f64().unwrap_or(0.0),
                 };
                 (model, tu)
@@ -345,7 +353,8 @@ pub fn get_session_detail_for_home(_home_dir: &Path, session_path: &str) -> Resu
         .map(|d| d.as_millis() as f64)
         .unwrap_or(0.0);
 
-    let file = fs::File::open(&jsonl_path).map_err(|e| format!("Failed to open session file: {e}"))?;
+    let file =
+        fs::File::open(&jsonl_path).map_err(|e| format!("Failed to open session file: {e}"))?;
     let reader = BufReader::new(file);
 
     let mut id = String::new();

@@ -28,4 +28,3 @@ fn main() -> anyhow::Result<()> {
     let mut app = app::App::new(home_dir);
     tui::run(&mut app)
 }
-

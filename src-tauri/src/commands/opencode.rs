@@ -3,8 +3,8 @@
 //! Core logic lives in `droidgear-core`.
 
 pub use droidgear_core::opencode::{
-    OpenCodeConfigStatus, OpenCodeCurrentConfig, OpenCodeProfile, OpenCodeProviderConfig,
-    OpenCodeProviderOptions, OpenCodeModelConfig, OpenCodeModelLimit, ProviderTemplate,
+    OpenCodeConfigStatus, OpenCodeCurrentConfig, OpenCodeModelConfig, OpenCodeModelLimit,
+    OpenCodeProfile, OpenCodeProviderConfig, OpenCodeProviderOptions, ProviderTemplate,
 };
 
 /// List all OpenCode profiles
@@ -38,7 +38,10 @@ pub async fn delete_opencode_profile(id: String) -> Result<(), String> {
 /// Duplicate a profile
 #[tauri::command]
 #[specta::specta]
-pub async fn duplicate_opencode_profile(id: String, new_name: String) -> Result<OpenCodeProfile, String> {
+pub async fn duplicate_opencode_profile(
+    id: String,
+    new_name: String,
+) -> Result<OpenCodeProfile, String> {
     droidgear_core::opencode::duplicate_opencode_profile(&id, &new_name)
 }
 
@@ -85,7 +88,8 @@ pub async fn test_opencode_provider_connection(
     base_url: String,
     api_key: String,
 ) -> Result<bool, String> {
-    droidgear_core::opencode::test_opencode_provider_connection(&provider_id, &base_url, &api_key).await
+    droidgear_core::opencode::test_opencode_provider_connection(&provider_id, &base_url, &api_key)
+        .await
 }
 
 /// Read current OpenCode configuration from config files
@@ -94,4 +98,3 @@ pub async fn test_opencode_provider_connection(
 pub async fn read_opencode_current_config() -> Result<OpenCodeCurrentConfig, String> {
     droidgear_core::opencode::read_opencode_current_config()
 }
-

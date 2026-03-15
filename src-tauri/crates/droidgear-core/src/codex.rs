@@ -112,7 +112,8 @@ fn profiles_dir_for_home(home_dir: &Path) -> Result<PathBuf, String> {
 fn active_profile_path_for_home(home_dir: &Path) -> Result<PathBuf, String> {
     let dir = droidgear_codex_dir_for_home(home_dir);
     if !dir.exists() {
-        std::fs::create_dir_all(&dir).map_err(|e| format!("Failed to create codex directory: {e}"))?;
+        std::fs::create_dir_all(&dir)
+            .map_err(|e| format!("Failed to create codex directory: {e}"))?;
     }
     Ok(dir.join("active-profile.txt"))
 }
@@ -168,10 +169,16 @@ fn provider_config_to_toml(config: &CodexProviderConfig) -> Result<toml::Value, 
         table.insert("name".to_string(), toml::Value::String(name.clone()));
     }
     if let Some(ref base_url) = config.base_url {
-        table.insert("base_url".to_string(), toml::Value::String(base_url.clone()));
+        table.insert(
+            "base_url".to_string(),
+            toml::Value::String(base_url.clone()),
+        );
     }
     if let Some(ref wire_api) = config.wire_api {
-        table.insert("wire_api".to_string(), toml::Value::String(wire_api.clone()));
+        table.insert(
+            "wire_api".to_string(),
+            toml::Value::String(wire_api.clone()),
+        );
     }
     if let Some(requires_openai_auth) = config.requires_openai_auth {
         table.insert(
@@ -193,7 +200,10 @@ fn provider_config_to_toml(config: &CodexProviderConfig) -> Result<toml::Value, 
         for (k, v) in http_headers {
             headers_table.insert(k.clone(), toml::Value::String(v.clone()));
         }
-        table.insert("http_headers".to_string(), toml::Value::Table(headers_table));
+        table.insert(
+            "http_headers".to_string(),
+            toml::Value::Table(headers_table),
+        );
     }
     if let Some(ref query_params) = config.query_params {
         let mut params_table = toml::map::Map::new();
@@ -210,7 +220,10 @@ fn provider_config_to_toml(config: &CodexProviderConfig) -> Result<toml::Value, 
 fn toml_to_provider_config(value: &toml::Value) -> Result<CodexProviderConfig, String> {
     let table = value.as_table().ok_or("Provider config must be a table")?;
 
-    let name = table.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
+    let name = table
+        .get("name")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
     let base_url = table
         .get("base_url")
         .and_then(|v| v.as_str())
@@ -219,9 +232,7 @@ fn toml_to_provider_config(value: &toml::Value) -> Result<CodexProviderConfig, S
         .get("wire_api")
         .and_then(|v| v.as_str())
         .map(|s| s.to_string());
-    let requires_openai_auth = table
-        .get("requires_openai_auth")
-        .and_then(|v| v.as_bool());
+    let requires_openai_auth = table.get("requires_openai_auth").and_then(|v| v.as_bool());
     let env_key = table
         .get("env_key")
         .and_then(|v| v.as_str())
@@ -314,7 +325,10 @@ pub fn get_codex_profile_for_home(home_dir: &Path, id: &str) -> Result<CodexProf
     load_profile_by_id(home_dir, id)
 }
 
-pub fn save_codex_profile_for_home(home_dir: &Path, mut profile: CodexProfile) -> Result<(), String> {
+pub fn save_codex_profile_for_home(
+    home_dir: &Path,
+    mut profile: CodexProfile,
+) -> Result<(), String> {
     if profile.id.trim().is_empty() {
         profile.id = Uuid::new_v4().to_string();
         profile.created_at = now_rfc3339();
@@ -496,13 +510,19 @@ pub fn apply_codex_profile_for_home(home_dir: &Path, id: &str) -> Result<(), Str
     if !profile.providers.is_empty() {
         let mut providers_table = toml::map::Map::new();
         for (provider_id, provider_config) in &profile.providers {
-            providers_table.insert(provider_id.clone(), provider_config_to_toml(provider_config)?);
+            providers_table.insert(
+                provider_id.clone(),
+                provider_config_to_toml(provider_config)?,
+            );
         }
-        config.insert("model_providers".to_string(), toml::Value::Table(providers_table));
+        config.insert(
+            "model_providers".to_string(),
+            toml::Value::Table(providers_table),
+        );
     }
 
-    let toml_str =
-        toml::to_string_pretty(&config).map_err(|e| format!("Failed to serialize config.toml: {e}"))?;
+    let toml_str = toml::to_string_pretty(&config)
+        .map_err(|e| format!("Failed to serialize config.toml: {e}"))?;
     storage::atomic_write(&config_path, toml_str.as_bytes())?;
 
     let auth_path = codex_auth_path_for_home(home_dir)?;
@@ -548,7 +568,9 @@ pub fn read_codex_current_config_for_home(home_dir: &Path) -> Result<CodexCurren
                 .map(|table| {
                     table
                         .iter()
-                        .filter_map(|(k, v)| toml_to_provider_config(v).ok().map(|c| (k.clone(), c)))
+                        .filter_map(|(k, v)| {
+                            toml_to_provider_config(v).ok().map(|c| (k.clone(), c))
+                        })
                         .collect::<HashMap<_, _>>()
                 })
                 .unwrap_or_default();

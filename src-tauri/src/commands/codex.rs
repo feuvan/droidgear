@@ -75,4 +75,3 @@ pub async fn get_codex_config_status() -> Result<CodexConfigStatus, String> {
 pub async fn read_codex_current_config() -> Result<CodexCurrentConfig, String> {
     droidgear_core::codex::read_codex_current_config()
 }
-

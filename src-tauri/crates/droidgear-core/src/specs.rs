@@ -41,7 +41,8 @@ pub fn list_specs_for_home(home_dir: &Path) -> Result<Vec<SpecFile>, String> {
     }
 
     let mut specs: Vec<SpecFile> = Vec::new();
-    let entries = fs::read_dir(&specs_dir).map_err(|e| format!("Failed to read specs directory: {e}"))?;
+    let entries =
+        fs::read_dir(&specs_dir).map_err(|e| format!("Failed to read specs directory: {e}"))?;
 
     for entry in entries {
         let entry = match entry {
@@ -133,7 +134,11 @@ pub fn read_spec(path: &str) -> Result<SpecFile, String> {
     })
 }
 
-pub fn rename_spec_for_home(home_dir: &Path, old_path: &str, new_name: &str) -> Result<SpecFile, String> {
+pub fn rename_spec_for_home(
+    home_dir: &Path,
+    old_path: &str,
+    new_name: &str,
+) -> Result<SpecFile, String> {
     let specs_dir = specs_dir_for_home(home_dir)?;
     let old_path_buf = PathBuf::from(old_path);
 
@@ -166,8 +171,7 @@ pub fn rename_spec_for_home(home_dir: &Path, old_path: &str, new_name: &str) -> 
         return Err("A file with this name already exists".to_string());
     }
 
-    fs::rename(&old_path_buf, &new_path)
-        .map_err(|e| format!("Failed to rename file: {e}"))?;
+    fs::rename(&old_path_buf, &new_path).map_err(|e| format!("Failed to rename file: {e}"))?;
 
     read_spec(&new_path.to_string_lossy())
 }
@@ -195,7 +199,11 @@ pub fn delete_spec(path: &str) -> Result<(), String> {
     delete_spec_for_home(&system_home_dir()?, path)
 }
 
-pub fn update_spec_for_home(home_dir: &Path, path: &str, content: &str) -> Result<SpecFile, String> {
+pub fn update_spec_for_home(
+    home_dir: &Path,
+    path: &str,
+    content: &str,
+) -> Result<SpecFile, String> {
     let specs_dir = specs_dir_for_home(home_dir)?;
     let path_buf = PathBuf::from(path);
 
@@ -213,4 +221,3 @@ pub fn update_spec_for_home(home_dir: &Path, path: &str, content: &str) -> Resul
 pub fn update_spec(path: &str, content: &str) -> Result<SpecFile, String> {
     update_spec_for_home(&system_home_dir()?, path, content)
 }
-

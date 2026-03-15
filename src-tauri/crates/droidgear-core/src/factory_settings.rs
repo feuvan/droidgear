@@ -138,7 +138,8 @@ fn write_config_file_for_home(home_dir: &Path, config: &Value) -> Result<(), Str
     let json_content = serde_json::to_string_pretty(config)
         .map_err(|e| format!("Failed to serialize config: {e}"))?;
 
-    std::fs::write(&temp_path, json_content).map_err(|e| format!("Failed to write config file: {e}"))?;
+    std::fs::write(&temp_path, json_content)
+        .map_err(|e| format!("Failed to write config file: {e}"))?;
 
     std::fs::rename(&temp_path, &actual_path).map_err(|e| {
         let _ = std::fs::remove_file(&temp_path);
@@ -157,7 +158,9 @@ fn system_home_dir() -> Result<PathBuf, String> {
 // ============================================================================
 
 pub fn get_config_path_for_home(home_dir: &Path) -> Result<String, String> {
-    Ok(factory_config_path_for_home(home_dir)?.to_string_lossy().to_string())
+    Ok(factory_config_path_for_home(home_dir)?
+        .to_string_lossy()
+        .to_string())
 }
 
 pub fn get_config_path() -> Result<String, String> {
@@ -196,7 +199,10 @@ pub fn load_custom_models() -> Result<Vec<CustomModel>, String> {
     load_custom_models_for_home(&system_home_dir()?)
 }
 
-pub fn save_custom_models_for_home(home_dir: &Path, models: Vec<CustomModel>) -> Result<(), String> {
+pub fn save_custom_models_for_home(
+    home_dir: &Path,
+    models: Vec<CustomModel>,
+) -> Result<(), String> {
     let mut config = match read_config_file_for_home(home_dir) {
         ConfigReadResult::Ok(value) => value,
         ConfigReadResult::NotFound => serde_json::json!({}),
@@ -263,7 +269,11 @@ pub fn delete_legacy_config() -> Result<(), String> {
     delete_legacy_config_for_home(&system_home_dir()?)
 }
 
-pub async fn fetch_models(provider: Provider, base_url: &str, api_key: &str) -> Result<Vec<ModelInfo>, String> {
+pub async fn fetch_models(
+    provider: Provider,
+    base_url: &str,
+    api_key: &str,
+) -> Result<Vec<ModelInfo>, String> {
     let client = reqwest::Client::new();
 
     let models = match provider {
@@ -597,7 +607,10 @@ pub fn get_include_co_authored_by_droid() -> Result<bool, String> {
     get_include_co_authored_by_droid_for_home(&system_home_dir()?)
 }
 
-pub fn save_include_co_authored_by_droid_for_home(home_dir: &Path, enabled: bool) -> Result<(), String> {
+pub fn save_include_co_authored_by_droid_for_home(
+    home_dir: &Path,
+    enabled: bool,
+) -> Result<(), String> {
     let mut config = match read_config_file_for_home(home_dir) {
         ConfigReadResult::Ok(value) => value,
         ConfigReadResult::NotFound => serde_json::json!({}),
@@ -639,7 +652,10 @@ pub fn get_show_thinking_in_main_view() -> Result<bool, String> {
     get_show_thinking_in_main_view_for_home(&system_home_dir()?)
 }
 
-pub fn save_show_thinking_in_main_view_for_home(home_dir: &Path, enabled: bool) -> Result<(), String> {
+pub fn save_show_thinking_in_main_view_for_home(
+    home_dir: &Path,
+    enabled: bool,
+) -> Result<(), String> {
     let mut config = match read_config_file_for_home(home_dir) {
         ConfigReadResult::Ok(value) => value,
         ConfigReadResult::NotFound => serde_json::json!({}),
@@ -661,4 +677,3 @@ pub fn save_show_thinking_in_main_view_for_home(home_dir: &Path, enabled: bool) 
 pub fn save_show_thinking_in_main_view(enabled: bool) -> Result<(), String> {
     save_show_thinking_in_main_view_for_home(&system_home_dir()?, enabled)
 }
-

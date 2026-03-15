@@ -8,16 +8,16 @@
 
 ### 目标（覆盖你提到的常用项）
 
-| 能力 | 现状（桌面版） | TUI 目标 |
-| --- | --- | --- |
-| Factory 配置（模型/默认模型/开关项） | `~/.factory/settings.json`（见 `src-tauri/src/commands/config.rs`） | 列表/增删改/复制/排序、设置默认、导入导出、变更预览 |
-| MCP 服务器管理 | `~/.factory/mcp.json`（见 `src-tauri/src/commands/mcp.rs`） | 列表/增删改/启用禁用、预设一键添加、导入导出、变更预览 |
-| Codex Profile 管理与一键应用 | `~/.droidgear/codex/**` + `~/.codex/**`（见 `src-tauri/src/commands/codex.rs`） | Profile CRUD、显示当前 live 配置、Plan/Preview/Apply |
-| OpenCode Profile 管理与一键应用 | `~/.droidgear/opencode/**` + `~/.config/opencode/**`（见 `src-tauri/src/commands/opencode.rs`） | Profile CRUD、Plan/Preview/Apply（含 JSONC 优先规则） |
-| OpenClaw Profile 管理与一键应用 | `~/.droidgear/openclaw/**` + `~/.openclaw/**`（见 `src-tauri/src/commands/openclaw.rs`） | Profile CRUD、Plan/Preview/Apply（含 deep-merge 规则） |
-| Sessions 管理 | `~/.factory/sessions/**`（见 `src-tauri/src/commands/sessions.rs`） | 项目/会话列表、详情查看、删除 |
-| Paths 覆盖（适配服务器/容器） | `~/.droidgear/settings.json`（见 `src-tauri/src/commands/paths.rs`） | 查看有效路径、设置/重置路径、对其它模块生效 |
-| Channels（代理平台/凭据/Token 拉取） | `~/.droidgear/channels.json` + `~/.droidgear/auth/**`（见 `src-tauri/src/commands/channel.rs`） | Channel CRUD、凭据管理、拉取 token（必要时） |
+| 能力                                 | 现状（桌面版）                                                                                  | TUI 目标                                               |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Factory 配置（模型/默认模型/开关项） | `~/.factory/settings.json`（见 `src-tauri/src/commands/config.rs`）                             | 列表/增删改/复制/排序、设置默认、导入导出、变更预览    |
+| MCP 服务器管理                       | `~/.factory/mcp.json`（见 `src-tauri/src/commands/mcp.rs`）                                     | 列表/增删改/启用禁用、预设一键添加、导入导出、变更预览 |
+| Codex Profile 管理与一键应用         | `~/.droidgear/codex/**` + `~/.codex/**`（见 `src-tauri/src/commands/codex.rs`）                 | Profile CRUD、显示当前 live 配置、Plan/Preview/Apply   |
+| OpenCode Profile 管理与一键应用      | `~/.droidgear/opencode/**` + `~/.config/opencode/**`（见 `src-tauri/src/commands/opencode.rs`） | Profile CRUD、Plan/Preview/Apply（含 JSONC 优先规则）  |
+| OpenClaw Profile 管理与一键应用      | `~/.droidgear/openclaw/**` + `~/.openclaw/**`（见 `src-tauri/src/commands/openclaw.rs`）        | Profile CRUD、Plan/Preview/Apply（含 deep-merge 规则） |
+| Sessions 管理                        | `~/.factory/sessions/**`（见 `src-tauri/src/commands/sessions.rs`）                             | 项目/会话列表、详情查看、删除                          |
+| Paths 覆盖（适配服务器/容器）        | `~/.droidgear/settings.json`（见 `src-tauri/src/commands/paths.rs`）                            | 查看有效路径、设置/重置路径、对其它模块生效            |
+| Channels（代理平台/凭据/Token 拉取） | `~/.droidgear/channels.json` + `~/.droidgear/auth/**`（见 `src-tauri/src/commands/channel.rs`） | Channel CRUD、凭据管理、拉取 token（必要时）           |
 
 ### 非目标（TUI 不必等价桌面）
 

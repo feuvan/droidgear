@@ -117,7 +117,10 @@ pub struct OpenCodeCurrentConfig {
 
 /// Gets ~/.droidgear/opencode/profiles/
 fn profiles_dir_for_home(home_dir: &Path) -> Result<PathBuf, String> {
-    let dir = home_dir.join(".droidgear").join("opencode").join("profiles");
+    let dir = home_dir
+        .join(".droidgear")
+        .join("opencode")
+        .join("profiles");
     if !dir.exists() {
         std::fs::create_dir_all(&dir)
             .map_err(|e| format!("Failed to create profiles directory: {e}"))?;
@@ -373,7 +376,9 @@ pub fn apply_opencode_profile_for_home(home_dir: &Path, id: &str) -> Result<(), 
             .map_err(|e| format!("Failed to serialize providers: {e}"))?;
 
         if let Some(obj) = config.as_object_mut() {
-            let existing = obj.entry("provider").or_insert_with(|| serde_json::json!({}));
+            let existing = obj
+                .entry("provider")
+                .or_insert_with(|| serde_json::json!({}));
             if let (Some(existing_obj), Some(new_obj)) =
                 (existing.as_object_mut(), providers_value.as_object())
             {
@@ -409,7 +414,9 @@ pub fn apply_opencode_profile_for_home(home_dir: &Path, id: &str) -> Result<(), 
     Ok(())
 }
 
-pub fn get_opencode_config_status_for_home(home_dir: &Path) -> Result<OpenCodeConfigStatus, String> {
+pub fn get_opencode_config_status_for_home(
+    home_dir: &Path,
+) -> Result<OpenCodeConfigStatus, String> {
     let config_path = opencode_config_path_for_home(home_dir)?;
     let auth_path = opencode_auth_path_for_home(home_dir)?;
 
@@ -497,7 +504,9 @@ fn normalize_provider_options(provider_value: &Value) -> Value {
     result
 }
 
-pub fn read_opencode_current_config_for_home(home_dir: &Path) -> Result<OpenCodeCurrentConfig, String> {
+pub fn read_opencode_current_config_for_home(
+    home_dir: &Path,
+) -> Result<OpenCodeCurrentConfig, String> {
     let config_path = opencode_config_path_for_home(home_dir)?;
     let config = read_json_file(&config_path);
     let provider_value = config

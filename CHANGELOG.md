@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.0
+
+**New Features / 新功能**
+
+- Add TUI (Terminal User Interface) version for headless environments with SSH support / 添加 TUI（终端用户界面）版本，支持无桌面环境和 SSH 访问
+- Extract droidgear-core library for shared business logic between desktop and TUI versions / 抽离 droidgear-core 库，桌面版和 TUI 版本共享核心业务逻辑
+- Add themed colors and form-based editors for TUI / 为 TUI 添加主题颜色和基于表单的编辑器
+- Add secret input component with visibility toggle for API keys and passwords / 添加密钥输入组件，支持切换 API 密钥和密码的可见性
+- Publish droidgear-tui binaries in GitHub releases for all platforms / 在 GitHub releases 中发布所有平台的 droidgear-tui 二进制文件
+- Add pre-commit hook for code quality checks / 添加 pre-commit 钩子进行代码质量检查
+- Add configuration option to disable auto-update / 添加配置选项以禁用自动更新
+
 ## v0.4.4
 
 **New Features / 新功能**
