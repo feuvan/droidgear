@@ -2031,10 +2031,11 @@ fn draw_profile_list<'a>(
     let mut items: Vec<ListItem> = Vec::new();
     for (name, id) in profiles {
         has_profiles = true;
-        let active_tag = active_id
-            .is_some_and(|a| a == id)
-            .then_some(" *")
-            .unwrap_or("");
+        let active_tag = if active_id.is_some_and(|a| a == id) {
+            " *"
+        } else {
+            ""
+        };
         if active_tag.is_empty() {
             items.push(ListItem::new(Line::from(Span::raw(name.to_string()))));
         } else {
