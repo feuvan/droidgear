@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use droidgear_core::{
     channel::Channel,
     codex::CodexProfile,
-    factory_settings::CustomModel,
+    factory_settings::{CustomModel, MissionModelSettings},
     mcp::McpServer,
     openclaw::{OpenClawProfile, OpenClawSubAgent},
     opencode::OpenCodeProfile,
@@ -40,6 +40,7 @@ pub enum Screen {
     Specs,
     Channels,
     ChannelsEdit,
+    Missions,
 }
 
 #[derive(Debug, Clone)]
@@ -378,6 +379,10 @@ pub enum SelectAction {
     OpenClawSubagentSetToolsProfile {
         id: String,
     },
+    MissionsSetWorkerModel,
+    MissionsSetWorkerReasoningEffort,
+    MissionsSetValidationWorkerModel,
+    MissionsSetValidationWorkerReasoningEffort,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -494,6 +499,9 @@ pub struct App {
     pub channels_edit_username: String,
     pub channels_edit_password: String,
     pub channels_edit_api_key: String,
+
+    pub mission_settings: MissionModelSettings,
+    pub mission_field_index: usize,
 }
 
 impl App {
@@ -579,6 +587,13 @@ impl App {
             channels_edit_username: String::new(),
             channels_edit_password: String::new(),
             channels_edit_api_key: String::new(),
+            mission_settings: MissionModelSettings {
+                worker_model: None,
+                worker_reasoning_effort: None,
+                validation_worker_model: None,
+                validation_worker_reasoning_effort: None,
+            },
+            mission_field_index: 0,
         }
     }
 
@@ -593,6 +608,7 @@ impl App {
             ("Sessions", Screen::Sessions),
             ("Specs", Screen::Specs),
             ("Channels", Screen::Channels),
+            ("Missions", Screen::Missions),
         ]
     }
 
@@ -819,6 +835,10 @@ impl App {
             .unwrap_or(0);
         if self.channels_edit_field_index >= channels_edit_fields_count {
             self.channels_edit_field_index = channels_edit_fields_count.saturating_sub(1);
+        }
+        let mission_fields_count = 4;
+        if self.mission_field_index >= mission_fields_count {
+            self.mission_field_index = mission_fields_count.saturating_sub(1);
         }
     }
 }

@@ -83,6 +83,24 @@ pub struct ModelInfo {
 }
 
 // ============================================================================
+// Mission Model Settings
+// ============================================================================
+
+/// Mission model settings for Mission mode workers
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct MissionModelSettings {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub worker_model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub worker_reasoning_effort: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validation_worker_model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub validation_worker_reasoning_effort: Option<String>,
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 
@@ -676,4 +694,70 @@ pub fn save_show_thinking_in_main_view_for_home(
 
 pub fn save_show_thinking_in_main_view(enabled: bool) -> Result<(), String> {
     save_show_thinking_in_main_view_for_home(&system_home_dir()?, enabled)
+}
+
+pub fn get_mission_model_settings_for_home(
+    home_dir: &Path,
+) -> Result<MissionModelSettings, String> {
+    let config = match read_config_file_for_home(home_dir) {
+        ConfigReadResult::Ok(value) => value,
+        ConfigReadResult::NotFound => {
+            return Ok(MissionModelSettings {
+                worker_model: None,
+                worker_reasoning_effort: None,
+                validation_worker_model: None,
+                validation_worker_reasoning_effort: None,
+            });
+        }
+        ConfigReadResult::ParseError(_) => {
+            return Ok(MissionModelSettings {
+                worker_model: None,
+                worker_reasoning_effort: None,
+                validation_worker_model: None,
+                validation_worker_reasoning_effort: None,
+            });
+        }
+    };
+
+    let settings = config
+        .get("missionModelSettings")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or(MissionModelSettings {
+            worker_model: None,
+            worker_reasoning_effort: None,
+            validation_worker_model: None,
+            validation_worker_reasoning_effort: None,
+        });
+
+    Ok(settings)
+}
+
+pub fn get_mission_model_settings() -> Result<MissionModelSettings, String> {
+    get_mission_model_settings_for_home(&system_home_dir()?)
+}
+
+pub fn save_mission_model_settings_for_home(
+    home_dir: &Path,
+    settings: MissionModelSettings,
+) -> Result<(), String> {
+    let mut config = match read_config_file_for_home(home_dir) {
+        ConfigReadResult::Ok(value) => value,
+        ConfigReadResult::NotFound => serde_json::json!({}),
+        ConfigReadResult::ParseError(e) => {
+            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
+        }
+    };
+
+    let settings_value = serde_json::to_value(&settings)
+        .map_err(|e| format!("Failed to serialize mission model settings: {e}"))?;
+
+    if let Some(obj) = config.as_object_mut() {
+        obj.insert("missionModelSettings".to_string(), settings_value);
+    }
+
+    write_config_file_for_home(home_dir, &config)
+}
+
+pub fn save_mission_model_settings(settings: MissionModelSettings) -> Result<(), String> {
+    save_mission_model_settings_for_home(&system_home_dir()?, settings)
 }

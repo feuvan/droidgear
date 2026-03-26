@@ -2,7 +2,9 @@
 //!
 //! Core logic lives in `droidgear-core`.
 
-pub use droidgear_core::factory_settings::{CustomModel, ModelInfo, Provider};
+pub use droidgear_core::factory_settings::{
+    CustomModel, MissionModelSettings, ModelInfo, Provider,
+};
 use tauri::AppHandle;
 
 /// Gets the path to the Factory config file
@@ -161,4 +163,19 @@ pub async fn get_show_thinking_in_main_view() -> Result<bool, String> {
 #[specta::specta]
 pub async fn save_show_thinking_in_main_view(enabled: bool) -> Result<(), String> {
     droidgear_core::factory_settings::save_show_thinking_in_main_view(enabled)
+}
+
+/// Gets the missionModelSettings from settings.json
+/// Returns empty settings if not set
+#[tauri::command]
+#[specta::specta]
+pub async fn get_mission_model_settings() -> Result<MissionModelSettings, String> {
+    droidgear_core::factory_settings::get_mission_model_settings()
+}
+
+/// Saves the missionModelSettings to settings.json
+#[tauri::command]
+#[specta::specta]
+pub async fn save_mission_model_settings(settings: MissionModelSettings) -> Result<(), String> {
+    droidgear_core::factory_settings::save_mission_model_settings(settings)
 }

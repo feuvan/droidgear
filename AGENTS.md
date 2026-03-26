@@ -32,6 +32,7 @@ Tauri v2 + React 19 desktop app. Uses npm (NOT pnpm), TypeScript strict mode, Zu
 7. **No unsolicited commits** — Only when explicitly requested
 8. **Use `rm -f`** when removing files
 9. **GUI/TUI parity** — When implementing a new GUI feature, synchronously implement the corresponding TUI version
+10. **Pre-commit ready** — Before declaring work complete, run `npm run rust:fmt`, `npx prettier --write .`, and verify `npm run check:all` passes. Code must be commit-ready; do not leave formatting or lint issues for the user to discover at commit time
 
 ## Version Requirements
 

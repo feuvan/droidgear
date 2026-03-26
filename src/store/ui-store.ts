@@ -10,6 +10,7 @@ export type DroidSubView =
   | 'mcp'
   | 'sessions'
   | 'terminal'
+  | 'missions'
   | 'legacy-versions'
 export type OpenCodeSubView = 'providers'
 export type OpenClawSubView = 'providers' | 'helpers' | 'subagents'

@@ -36,6 +36,8 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         config::save_include_co_authored_by_droid,
         config::get_show_thinking_in_main_view,
         config::save_show_thinking_in_main_view,
+        config::get_mission_model_settings,
+        config::save_mission_model_settings,
         channel::load_channels,
         channel::save_channels,
         channel::save_channel_credentials,

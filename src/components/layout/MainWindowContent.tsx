@@ -9,6 +9,7 @@ import {
   McpPage,
   SessionsPage,
   TerminalPage,
+  MissionsPage,
 } from '@/components/droid'
 import { OpenCodeConfigPage } from '@/components/opencode'
 import { CodexConfigPage } from '@/components/codex'
@@ -78,6 +79,7 @@ export function MainWindowContent({
           {droidSubView === 'mcp' && <McpPage />}
           {droidSubView === 'sessions' && <SessionsPage />}
           {droidSubView === 'helpers' && <DroidHelpersPage />}
+          {droidSubView === 'missions' && <MissionsPage />}
           {droidSubView === 'legacy-versions' && <LegacyVersionsPage />}
         </>
       )

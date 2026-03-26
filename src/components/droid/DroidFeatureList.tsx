@@ -8,6 +8,7 @@ import {
   MessageSquare,
   TerminalSquare,
   History,
+  Rocket,
 } from 'lucide-react'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { toast } from 'sonner'
@@ -38,6 +39,7 @@ const features: FeatureItem[] = [
   { id: 'models', labelKey: 'droid.features.models', icon: Cpu },
   { id: 'helpers', labelKey: 'droid.features.helpers', icon: LifeBuoy },
   { id: 'specs', labelKey: 'droid.features.specs', icon: FileText },
+  { id: 'missions', labelKey: 'droid.features.missions', icon: Rocket },
   { id: 'mcp', labelKey: 'droid.features.mcp', icon: Plug },
   { id: 'sessions', labelKey: 'droid.features.sessions', icon: MessageSquare },
   { id: 'terminal', labelKey: 'droid.features.terminal', icon: TerminalSquare },

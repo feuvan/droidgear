@@ -341,6 +341,7 @@ fn draw_main(frame: &mut Frame, app: &app::App, area: Rect) {
         app::Screen::Specs => draw_specs(frame, app, area),
         app::Screen::Channels => draw_channels(frame, app, area),
         app::Screen::ChannelsEdit => draw_channels_edit(frame, app, area),
+        app::Screen::Missions => draw_missions(frame, app, area),
     }
 }
 
@@ -2370,4 +2371,63 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1]
+}
+
+fn draw_missions(frame: &mut Frame, app: &app::App, area: Rect) {
+    let t = theme();
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(0), Constraint::Length(2)].as_ref())
+        .split(area);
+
+    let not_set = "(not set)";
+    let fields: Vec<(&str, String)> = vec![
+        (
+            "Worker Model",
+            app.mission_settings
+                .worker_model
+                .clone()
+                .unwrap_or_else(|| not_set.to_string()),
+        ),
+        (
+            "Worker Reasoning",
+            app.mission_settings
+                .worker_reasoning_effort
+                .clone()
+                .unwrap_or_else(|| not_set.to_string()),
+        ),
+        (
+            "Validation Model",
+            app.mission_settings
+                .validation_worker_model
+                .clone()
+                .unwrap_or_else(|| not_set.to_string()),
+        ),
+        (
+            "Validation Reasoning",
+            app.mission_settings
+                .validation_worker_reasoning_effort
+                .clone()
+                .unwrap_or_else(|| not_set.to_string()),
+        ),
+    ];
+
+    let mut items: Vec<ListItem> = Vec::new();
+    for (i, (label, value)) in fields.into_iter().enumerate() {
+        let selected = i == app.mission_field_index;
+        let line = if selected {
+            Line::from(format!("{label:>22}: {value}"))
+        } else {
+            field_line(label, &value, 22)
+        };
+        items.push(ListItem::new(line));
+    }
+
+    let list = List::new(items)
+        .block(block("Missions"))
+        .highlight_style(t.selected_row_style());
+    render_list(frame, list, chunks[0], Some(app.mission_field_index));
+
+    let help = help_paragraph("Up/Down: select  Enter/e: edit  r: refresh  q/Esc: back");
+    frame.render_widget(help, chunks[1]);
 }

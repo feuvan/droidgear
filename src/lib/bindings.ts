@@ -335,6 +335,29 @@ async saveShowThinkingInMainView(enabled: boolean) : Promise<Result<null, string
 }
 },
 /**
+ * Gets the missionModelSettings from settings.json
+ * Returns empty settings if not set
+ */
+async getMissionModelSettings() : Promise<Result<MissionModelSettings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_mission_model_settings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Saves the missionModelSettings to settings.json
+ */
+async saveMissionModelSettings(settings: MissionModelSettings) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_mission_model_settings", { settings }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Loads all channels from ~/.droidgear/channels.json
  * Falls back to ~/.factory/settings.json for migration
  */
@@ -1383,6 +1406,10 @@ headers?: Partial<{ [key in string]: string }> | null }
  * MCP server type
  */
 export type McpServerType = "stdio" | "http"
+/**
+ * Mission model settings for Mission mode workers
+ */
+export type MissionModelSettings = { workerModel?: string | null; workerReasoningEffort?: string | null; validationWorkerModel?: string | null; validationWorkerReasoningEffort?: string | null }
 /**
  * Model info returned from API
  */
