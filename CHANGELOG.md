@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.5.5
+
+**New Features / 新功能**
+
+- Add case-insensitive model matching and support for OpenAI o-series models / 添加不区分大小写的模型匹配并支持 OpenAI o 系列模型
+- Preserve official login auth and add official profile for Codex / Codex 保留官方登录认证并添加官方配置
+
+**Bug Fixes / 问题修复**
+
+- Update TAURI_PRIVATE_KEY_PASSWORD environment variable to use TAURI_SIGNING_PRIVATE_KEY_PASSWORD secret / 更新 TAURI_PRIVATE_KEY_PASSWORD 环境变量以使用 TAURI_SIGNING_PRIVATE_KEY_PASSWORD 密钥
+- Relax pre-commit security audit threshold / 放宽 pre-commit 安全审计阈值
+
 ## v0.5.4
 
 **New Features / 新功能**
