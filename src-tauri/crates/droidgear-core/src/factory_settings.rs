@@ -310,6 +310,7 @@ async fn fetch_anthropic_models(
     api_key: &str,
 ) -> Result<Vec<ModelInfo>, String> {
     let url = format!("{}/v1/models", base_url.trim_end_matches('/'));
+    log::debug!("FetchModels: requesting Anthropic models from {url}");
 
     let response = client
         .get(&url)
@@ -320,6 +321,10 @@ async fn fetch_anthropic_models(
         .map_err(|e| format!("Request failed: {e}"))?;
 
     let response = if !response.status().is_success() {
+        log::debug!(
+            "FetchModels: Anthropic x-api-key auth failed ({}), retrying with Bearer token",
+            response.status()
+        );
         client
             .get(&url)
             .header("Authorization", format!("Bearer {api_key}"))
@@ -330,16 +335,26 @@ async fn fetch_anthropic_models(
         response
     };
 
-    if !response.status().is_success() {
-        let status = response.status();
+    let status = response.status();
+    if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
+        log::warn!("FetchModels: Anthropic API error, url={url} status={status} body={body}");
         return Err(format!("API error {status}: {body}"));
     }
 
-    let data: Value = response
-        .json()
+    let body = response
+        .text()
         .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
+        .map_err(|e| format!("Failed to read response body: {e}"))?;
+    let data: Value = serde_json::from_str(&body).map_err(|e| {
+        let truncated = if body.len() > 500 {
+            format!("{}...", &body[..500])
+        } else {
+            body.clone()
+        };
+        log::warn!("FetchModels: failed to parse Anthropic response, url={url} status={status} body={truncated}");
+        format!("Failed to parse response: {e}")
+    })?;
 
     let models = data
         .get("data")
@@ -367,6 +382,7 @@ async fn fetch_openai_models(
     api_key: &str,
 ) -> Result<Vec<ModelInfo>, String> {
     let url = format!("{}/v1/models", base_url.trim_end_matches('/'));
+    log::debug!("FetchModels: requesting OpenAI models from {url}");
 
     let response = client
         .get(&url)
@@ -375,16 +391,26 @@ async fn fetch_openai_models(
         .await
         .map_err(|e| format!("Request failed: {e}"))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
+    let status = response.status();
+    if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
+        log::warn!("FetchModels: OpenAI API error, url={url} status={status} body={body}");
         return Err(format!("API error {status}: {body}"));
     }
 
-    let data: Value = response
-        .json()
+    let body = response
+        .text()
         .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
+        .map_err(|e| format!("Failed to read response body: {e}"))?;
+    let data: Value = serde_json::from_str(&body).map_err(|e| {
+        let truncated = if body.len() > 500 {
+            format!("{}...", &body[..500])
+        } else {
+            body.clone()
+        };
+        log::warn!("FetchModels: failed to parse OpenAI response, url={url} status={status} body={truncated}");
+        format!("Failed to parse response: {e}")
+    })?;
 
     let models = data
         .get("data")

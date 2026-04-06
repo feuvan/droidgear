@@ -15,6 +15,7 @@ import {
 } from '@dnd-kit/sortable'
 import { ModelCard } from './ModelCard'
 import { useModelStore } from '@/store/model-store'
+import { useConnectivityStore } from '@/store/connectivity-store'
 import type { CustomModel } from '@/lib/bindings'
 
 interface FilteredModel {
@@ -47,6 +48,7 @@ export function ModelList({
 }: ModelListProps) {
   const { t } = useTranslation()
   const { models, reorderModels } = useModelStore()
+  const { testSingleModel } = useConnectivityStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -61,6 +63,15 @@ export function ModelList({
       const oldIndex = parseInt(String(active.id).replace('model-', ''))
       const newIndex = parseInt(String(over.id).replace('model-', ''))
       reorderModels(oldIndex, newIndex)
+    }
+  }
+
+  const handleTestConnection = async (modelId: string | null | undefined) => {
+    if (!modelId) return
+    try {
+      await testSingleModel(modelId)
+    } catch (error) {
+      console.error('Failed to test model connection:', error)
     }
   }
 
@@ -112,6 +123,7 @@ export function ModelList({
             onDelete={() => onDelete(originalIndex)}
             onCopy={() => onCopy(originalIndex)}
             onSetDefault={() => onSetDefault(originalIndex)}
+            onTestConnection={() => handleTestConnection(model.id)}
           />
         ))}
       </div>
@@ -144,6 +156,7 @@ export function ModelList({
               onDelete={() => onDelete(originalIndex)}
               onCopy={() => onCopy(originalIndex)}
               onSetDefault={() => onSetDefault(originalIndex)}
+              onTestConnection={() => handleTestConnection(model.id)}
             />
           ))}
         </div>

@@ -1063,6 +1063,54 @@ async deleteSession(sessionPath: string) : Promise<Result<null, string>> {
     else return { status: "error", error: e  as any };
 }
 },
+async testModelConnection(modelId: string) : Promise<Result<ModelTestResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_model_connection", { modelId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async testAllModelConnectionsCommand() : Promise<Result<ModelTestResult[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_all_model_connections_command") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getConnectivitySummary(results: ModelTestResult[]) : Promise<Result<ConnectivitySummary, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_connectivity_summary", { results }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async testProviderConnection(provider: string, baseUrl: string, apiKey: string, modelId: string) : Promise<Result<ConnectionDiagnostics, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_provider_connection", { provider, baseUrl, apiKey, modelId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async testModelConnectionWithMode(modelId: string, mode: TestMode, prompt: string | null) : Promise<Result<ModelTestResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_model_connection_with_mode", { modelId, mode, prompt }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async testAllModelConnectionsWithMode(mode: TestMode, prompt: string | null) : Promise<Result<ModelTestResult[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_all_model_connections_with_mode", { mode, prompt }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 /**
  * Gets the current configuration paths (custom values only)
  */
@@ -1321,6 +1369,16 @@ export type CodexProviderConfig = { name?: string | null; baseUrl?: string | nul
  * User-defined configuration paths (only stores explicitly set paths)
  */
 export type ConfigPaths = { factory?: string | null; opencode?: string | null; opencodeAuth?: string | null; codex?: string | null; openclaw?: string | null }
+export type ConnectionDiagnostics = { success: boolean; provider: string; modelId: string; latencyMs: number; error?: string | null; timestamp: string; testMode: TestMode; 
+/**
+ * Actual model response text (inference mode only).
+ */
+responseText?: string | null; 
+/**
+ * The prompt that was sent (inference mode only).
+ */
+promptUsed?: string | null }
+export type ConnectivitySummary = { totalModels: number; availableModels: number; unavailableModels: number; avgLatencyMs: number; lastUpdated: string }
 /**
  * Message content block
  */
@@ -1438,6 +1496,7 @@ export type MissionModelSettings = { workerModel?: string | null; workerReasonin
  * Model info returned from API
  */
 export type ModelInfo = { id: string; name: string | null }
+export type ModelTestResult = { modelId: string; modelName: string; diagnostics: ConnectionDiagnostics; isAvailable: boolean }
 /**
  * OpenClaw config status
  */
@@ -1623,6 +1682,10 @@ modifiedAt: number }
  * Telegram channel configuration
  */
 export type TelegramChannelConfig = { blockStreaming?: boolean | null; chunkMode?: string | null }
+/**
+ * Test mode: ping (HTTP probe) or inference (real model call).
+ */
+export type TestMode = "ping" | "inference"
 /**
  * Token usage statistics
  */

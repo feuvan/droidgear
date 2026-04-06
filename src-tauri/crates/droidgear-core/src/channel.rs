@@ -407,10 +407,21 @@ async fn fetch_new_api_keys(
         return Err(format!("Login failed {status}: {body}"));
     }
 
-    let login_data: Value = login_response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse login response: {e}"))?;
+    let login_data: Value = {
+        let body = login_response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read login response body: {e}"))?;
+        serde_json::from_str(&body).map_err(|e| {
+            let truncated = if body.len() > 500 {
+                format!("{}...", &body[..500])
+            } else {
+                body.clone()
+            };
+            log::warn!("Channel: failed to parse login response, body={truncated}");
+            format!("Failed to parse login response: {e}")
+        })?
+    };
 
     if login_data.get("success").and_then(|v| v.as_bool()) != Some(true) {
         let msg = login_data
@@ -447,10 +458,21 @@ async fn fetch_new_api_keys(
             return Err(format!("API error {status}: {body}"));
         }
 
-        let data: Value = response
-            .json()
-            .await
-            .map_err(|e| format!("Failed to parse response: {e}"))?;
+        let data: Value = {
+            let body = response
+                .text()
+                .await
+                .map_err(|e| format!("Failed to read response body: {e}"))?;
+            serde_json::from_str(&body).map_err(|e| {
+                let truncated = if body.len() > 500 {
+                    format!("{}...", &body[..500])
+                } else {
+                    body.clone()
+                };
+                log::warn!("Channel: failed to parse keys response, body={truncated}");
+                format!("Failed to parse response: {e}")
+            })?
+        };
 
         let items: Vec<Value> = data
             .get("data")
@@ -554,10 +576,21 @@ async fn fetch_sub2api_tokens(
         return Err(format!("Login failed {status}: {body}"));
     }
 
-    let login_data: Value = login_response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse login response: {e}"))?;
+    let login_data: Value = {
+        let body = login_response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read login response body: {e}"))?;
+        serde_json::from_str(&body).map_err(|e| {
+            let truncated = if body.len() > 500 {
+                format!("{}...", &body[..500])
+            } else {
+                body.clone()
+            };
+            log::warn!("Channel: failed to parse login response (v1), body={truncated}");
+            format!("Failed to parse login response: {e}")
+        })?
+    };
 
     if login_data.get("code").and_then(|v| v.as_i64()) != Some(0) {
         let msg = login_data
@@ -627,10 +660,21 @@ async fn fetch_sub2api_tokens(
             return Err(format!("API error {status}: {body}"));
         }
 
-        let keys_data: Value = keys_response
-            .json()
-            .await
-            .map_err(|e| format!("Failed to parse keys response: {e}"))?;
+        let keys_data: Value = {
+            let body = keys_response
+                .text()
+                .await
+                .map_err(|e| format!("Failed to read keys response body: {e}"))?;
+            serde_json::from_str(&body).map_err(|e| {
+                let truncated = if body.len() > 500 {
+                    format!("{}...", &body[..500])
+                } else {
+                    body.clone()
+                };
+                log::warn!("Channel: failed to parse keys response, body={truncated}");
+                format!("Failed to parse keys response: {e}")
+            })?
+        };
 
         let items: Vec<Value> = keys_data
             .get("data")
@@ -730,6 +774,7 @@ pub async fn fetch_models_by_api_key(
 
     if platform == Some("antigravity") {
         let claude_url = format!("{trimmed_base}/antigravity/v1/models");
+        log::debug!("Channel: fetching models from {claude_url} (antigravity)");
 
         let response = client
             .get(&claude_url)
@@ -738,16 +783,28 @@ pub async fn fetch_models_by_api_key(
             .await
             .map_err(|e| format!("Request failed: {e}"))?;
 
-        if !response.status().is_success() {
-            let status = response.status();
+        let status = response.status();
+        if !status.is_success() {
             let body = response.text().await.unwrap_or_default();
+            log::warn!(
+                "Channel: antigravity API error, url={claude_url} status={status} body={body}"
+            );
             return Err(format!("API error {status}: {body}"));
         }
 
-        let data: Value = response
-            .json()
+        let body = response
+            .text()
             .await
-            .map_err(|e| format!("Failed to parse response: {e}"))?;
+            .map_err(|e| format!("Failed to read response body: {e}"))?;
+        let data: Value = serde_json::from_str(&body).map_err(|e| {
+            let truncated = if body.len() > 500 {
+                format!("{}...", &body[..500])
+            } else {
+                body.clone()
+            };
+            log::warn!("Channel: failed to parse antigravity response, url={claude_url} status={status} body={truncated}");
+            format!("Failed to parse response: {e}")
+        })?;
 
         return Ok(parse_openai_models(&data));
     }
@@ -757,6 +814,7 @@ pub async fn fetch_models_by_api_key(
         Some("openai") => (format!("{trimmed_base}/v1/models"), parse_openai_models),
         _ => (format!("{trimmed_base}/v1/models"), parse_openai_models),
     };
+    log::debug!("Channel: fetching models from {url} (platform={platform:?})");
 
     let response = client
         .get(&url)
@@ -765,16 +823,26 @@ pub async fn fetch_models_by_api_key(
         .await
         .map_err(|e| format!("Request failed: {e}"))?;
 
-    if !response.status().is_success() {
-        let status = response.status();
+    let status = response.status();
+    if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
+        log::warn!("Channel: API error, url={url} status={status} body={body}");
         return Err(format!("API error {status}: {body}"));
     }
 
-    let data: Value = response
-        .json()
+    let body = response
+        .text()
         .await
-        .map_err(|e| format!("Failed to parse response: {e}"))?;
+        .map_err(|e| format!("Failed to read response body: {e}"))?;
+    let data: Value = serde_json::from_str(&body).map_err(|e| {
+        let truncated = if body.len() > 500 {
+            format!("{}...", &body[..500])
+        } else {
+            body.clone()
+        };
+        log::warn!("Channel: failed to parse response, url={url} status={status} body={truncated}");
+        format!("Failed to parse response: {e}")
+    })?;
 
     Ok(parser(&data))
 }

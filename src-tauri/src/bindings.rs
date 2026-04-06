@@ -2,8 +2,8 @@ use tauri_specta::{collect_commands, Builder};
 
 pub fn generate_bindings() -> Builder<tauri::Wry> {
     use crate::commands::{
-        channel, codex, config, env, mcp, notifications, openclaw, opencode, paths, preferences,
-        recovery, sessions, specs, updater,
+        channel, codex, config, connectivity, env, mcp, notifications, openclaw, opencode, paths,
+        preferences, recovery, sessions, specs, updater,
     };
 
     Builder::<tauri::Wry>::new().commands(collect_commands![
@@ -103,6 +103,12 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         sessions::start_sessions_watcher,
         sessions::stop_sessions_watcher,
         sessions::delete_session,
+        connectivity::test_model_connection,
+        connectivity::test_all_model_connections_command,
+        connectivity::get_connectivity_summary,
+        connectivity::test_provider_connection,
+        connectivity::test_model_connection_with_mode,
+        connectivity::test_all_model_connections_with_mode,
         paths::get_config_paths,
         paths::get_effective_paths,
         paths::save_config_path,

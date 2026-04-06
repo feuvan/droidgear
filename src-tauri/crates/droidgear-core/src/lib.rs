@@ -1,5 +1,6 @@
 pub mod channel;
 pub mod codex;
+pub mod connectivity;
 pub mod factory_settings;
 pub mod json;
 pub mod mcp;

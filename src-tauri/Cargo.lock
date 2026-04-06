@@ -1284,11 +1284,13 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "json_comments",
+ "log",
  "reqwest",
  "serde",
  "serde_json",
  "specta",
  "tempfile",
+ "tokio",
  "toml 0.8.2",
  "uuid",
 ]

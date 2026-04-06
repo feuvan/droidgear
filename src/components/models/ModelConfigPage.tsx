@@ -11,6 +11,8 @@ import {
   CheckSquare,
   Download,
   Upload,
+  Wifi,
+  BarChart3,
 } from 'lucide-react'
 import { save, open } from '@tauri-apps/plugin-dialog'
 import { writeTextFile, readTextFile } from '@tauri-apps/plugin-fs'
@@ -38,7 +40,9 @@ import {
 import { ModelList } from './ModelList'
 import { ModelDialog } from './ModelDialog'
 import { ModelImportDialog, type MergeStrategy } from './ModelImportDialog'
+import { ConnectivityPanel } from './ConnectivityPanel'
 import { useModelStore } from '@/store/model-store'
+import { useConnectivityStore } from '@/store/connectivity-store'
 import type { CustomModel } from '@/lib/bindings'
 import { useTranslation } from 'react-i18next'
 
@@ -71,6 +75,12 @@ export function ModelConfigPage() {
     setDefaultModel,
   } = useModelStore()
 
+  const {
+    testAllModels,
+    testResults,
+    isLoading: connectivityLoading,
+  } = useConnectivityStore()
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [copyingModel, setCopyingModel] = useState<CustomModel | null>(null)
@@ -89,6 +99,9 @@ export function ModelConfigPage() {
   // Import/Export state
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [importModels, setImportModels] = useState<CustomModel[]>([])
+
+  // Connectivity panel state
+  const [showConnectivityPanel, setShowConnectivityPanel] = useState(false)
 
   useEffect(() => {
     loadModels()
@@ -328,6 +341,45 @@ export function ModelConfigPage() {
     setImportModels([])
   }
 
+  // Test all model connections
+  const handleTestAllConnections = async () => {
+    try {
+      await testAllModels()
+    } catch (error) {
+      console.error('Failed to test all connections:', error)
+    }
+  }
+
+  // Get connectivity summary badge
+  const getConnectivityBadge = () => {
+    if (testResults.length === 0) {
+      return null
+    }
+
+    const total = testResults.length
+    const avail = testResults.filter(r => r.isAvailable).length
+    const availability = (avail / total) * 100
+    let variant: 'default' | 'secondary' | 'destructive' = 'secondary'
+    const text = `${avail}/${total}`
+
+    if (availability >= 90) {
+      variant = 'default'
+    } else if (availability < 70) {
+      variant = 'destructive'
+    }
+
+    return (
+      <Badge
+        variant={variant}
+        className="ml-2 cursor-pointer"
+        onClick={() => setShowConnectivityPanel(true)}
+      >
+        <Wifi className="h-3 w-3 mr-1" />
+        {text}
+      </Badge>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -339,6 +391,7 @@ export function ModelConfigPage() {
             <code className="truncate text-xs bg-muted px-1 py-0.5 rounded select-all cursor-text">
               {configPath}
             </code>
+            {getConnectivityBadge()}
             {hasChanges && (
               <Badge
                 variant="secondary"
@@ -350,6 +403,14 @@ export function ModelConfigPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowConnectivityPanel(!showConnectivityPanel)}
+            title={t('connectivity.connectionStatus')}
+          >
+            <BarChart3 className="h-4 w-4" />
+          </Button>
           <Button
             variant="outline"
             size="icon"
@@ -395,100 +456,123 @@ export function ModelConfigPage() {
         </div>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="mx-4 mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-destructive" />
-          <span className="text-sm text-destructive">{error}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto"
-            onClick={() => setError(null)}
-          >
-            {t('common.dismiss')}
-          </Button>
-        </div>
-      )}
-
-      {/* Filter Bar */}
-      {models.length > 0 && (
-        <div className="flex items-center gap-2 px-4 pt-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('models.search')}
-              value={filterText}
-              onChange={e => setFilterText(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={filterProvider} onValueChange={setFilterProvider}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder={t('models.filterProvider')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('models.filterProvider')}</SelectItem>
-              <SelectItem value="anthropic">
-                {t('models.providerAnthropic')}
-              </SelectItem>
-              <SelectItem value="openai">
-                {t('models.providerOpenAI')}
-              </SelectItem>
-              <SelectItem value="generic-chat-completion-api">
-                {t('models.providerGeneric')}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          {!selectionMode ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEnterSelectionMode}
-              disabled={models.length === 0}
-            >
-              <CheckSquare className="h-4 w-4 mr-2" />
-              {t('models.batchDelete')}
-            </Button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleSelectAll}>
-                {t('models.selectAll')}
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setShowBatchDeleteConfirm(true)}
-                disabled={selectedIndices.size === 0}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {t('models.deleteSelected', { count: selectedIndices.size })}
-              </Button>
+      {/* Main content area */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Model list */}
+        <div
+          className={`flex-1 flex flex-col ${showConnectivityPanel ? 'border-r' : ''}`}
+        >
+          {/* Error Alert */}
+          {error && (
+            <div className="mx-4 mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <span className="text-sm text-destructive">{error}</span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleExitSelectionMode}
+                className="ml-auto"
+                onClick={() => setError(null)}
               >
-                <X className="h-4 w-4" />
+                {t('common.dismiss')}
               </Button>
             </div>
           )}
-        </div>
-      )}
 
-      {/* Model List */}
-      <div className="flex-1 overflow-auto p-4">
-        <ModelList
-          onEdit={handleEdit}
-          onDelete={setDeleteIndex}
-          onCopy={handleCopy}
-          onSetDefault={setDefaultModel}
-          filteredModels={filteredModels}
-          selectionMode={selectionMode}
-          selectedIndices={selectedIndices}
-          onSelect={handleSelect}
-          defaultModelId={defaultModelId}
-        />
+          {/* Filter Bar */}
+          {models.length > 0 && (
+            <div className="flex items-center gap-2 px-4 pt-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('models.search')}
+                  value={filterText}
+                  onChange={e => setFilterText(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={filterProvider} onValueChange={setFilterProvider}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder={t('models.filterProvider')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    {t('models.filterProvider')}
+                  </SelectItem>
+                  <SelectItem value="anthropic">
+                    {t('models.providerAnthropic')}
+                  </SelectItem>
+                  <SelectItem value="openai">
+                    {t('models.providerOpenAI')}
+                  </SelectItem>
+                  <SelectItem value="generic-chat-completion-api">
+                    {t('models.providerGeneric')}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {!selectionMode ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEnterSelectionMode}
+                  disabled={models.length === 0}
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  {t('models.batchDelete')}
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                    {t('models.selectAll')}
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setShowBatchDeleteConfirm(true)}
+                    disabled={selectedIndices.size === 0}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    {t('models.deleteSelected', {
+                      count: selectedIndices.size,
+                    })}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleExitSelectionMode}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Model List */}
+          <div className="flex-1 overflow-auto p-4">
+            <ModelList
+              onEdit={handleEdit}
+              onDelete={setDeleteIndex}
+              onCopy={handleCopy}
+              onSetDefault={setDefaultModel}
+              filteredModels={filteredModels}
+              selectionMode={selectionMode}
+              selectedIndices={selectedIndices}
+              onSelect={handleSelect}
+              defaultModelId={defaultModelId}
+            />
+          </div>
+        </div>
+
+        {/* Connectivity Panel */}
+        {showConnectivityPanel && (
+          <div className="w-80 border-l flex flex-col">
+            <ConnectivityPanel
+              onTestAll={handleTestAllConnections}
+              onClose={() => setShowConnectivityPanel(false)}
+              isLoading={connectivityLoading}
+            />
+          </div>
+        )}
       </div>
 
       {/* Model Dialog */}
