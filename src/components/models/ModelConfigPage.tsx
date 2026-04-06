@@ -40,6 +40,7 @@ import {
 import { ModelList } from './ModelList'
 import { ModelDialog } from './ModelDialog'
 import { ModelImportDialog, type MergeStrategy } from './ModelImportDialog'
+import { DefaultModelDialog } from './DefaultModelDialog'
 import { ConnectivityPanel } from './ConnectivityPanel'
 import { useModelStore } from '@/store/model-store'
 import { useConnectivityStore } from '@/store/connectivity-store'
@@ -62,6 +63,7 @@ export function ModelConfigPage() {
     error,
     configParseError,
     defaultModelId,
+    sessionDefaultSettings,
     loadModels,
     saveModels,
     resetConfigAndSave,
@@ -72,7 +74,7 @@ export function ModelConfigPage() {
     setError,
     clearConfigParseError,
     loadDefaultModel,
-    setDefaultModel,
+    saveSessionDefaultSettings,
   } = useModelStore()
 
   const {
@@ -102,6 +104,12 @@ export function ModelConfigPage() {
 
   // Connectivity panel state
   const [showConnectivityPanel, setShowConnectivityPanel] = useState(false)
+
+  // Default model dialog state
+  const [defaultDialogOpen, setDefaultDialogOpen] = useState(false)
+  const [defaultDialogModelIndex, setDefaultDialogModelIndex] = useState<
+    number | null
+  >(null)
 
   useEffect(() => {
     loadModels()
@@ -553,12 +561,16 @@ export function ModelConfigPage() {
               onEdit={handleEdit}
               onDelete={setDeleteIndex}
               onCopy={handleCopy}
-              onSetDefault={setDefaultModel}
+              onSetDefault={index => {
+                setDefaultDialogModelIndex(index)
+                setDefaultDialogOpen(true)
+              }}
               filteredModels={filteredModels}
               selectionMode={selectionMode}
               selectedIndices={selectedIndices}
               onSelect={handleSelect}
               defaultModelId={defaultModelId}
+              specModeModelId={sessionDefaultSettings?.specModeModel ?? null}
             />
           </div>
         </div>
@@ -695,6 +707,19 @@ export function ModelConfigPage() {
         importModels={importModels}
         existingModels={models}
         onImport={handleImportConfirm}
+      />
+
+      {/* Default Model Settings Dialog */}
+      <DefaultModelDialog
+        open={defaultDialogOpen}
+        onOpenChange={setDefaultDialogOpen}
+        model={
+          defaultDialogModelIndex !== null
+            ? (models[defaultDialogModelIndex] ?? null)
+            : null
+        }
+        currentSettings={sessionDefaultSettings}
+        onSave={saveSessionDefaultSettings}
       />
     </div>
   )

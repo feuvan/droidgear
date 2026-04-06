@@ -358,6 +358,29 @@ async saveMissionModelSettings(settings: MissionModelSettings) : Promise<Result<
 }
 },
 /**
+ * Gets the sessionDefaultSettings from settings.json
+ * Returns empty settings if not set
+ */
+async getSessionDefaultSettings() : Promise<Result<SessionDefaultSettings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_session_default_settings") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Saves the sessionDefaultSettings to settings.json
+ */
+async saveSessionDefaultSettings(settings: SessionDefaultSettings) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("save_session_default_settings", { settings }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Loads all channels from ~/.droidgear/channels.json
  * Falls back to ~/.factory/settings.json for migration
  */
@@ -1593,6 +1616,10 @@ export type RecoveryError =
  * JSON serialization/deserialization error
  */
 { type: "ParseError"; message: string }
+/**
+ * Session default settings for mixed models configuration
+ */
+export type SessionDefaultSettings = { model?: string | null; reasoningEffort?: string | null; specModeModel?: string | null; specModeReasoningEffort?: string | null; autonomyMode?: string | null }
 /**
  * Session detail with messages
  */

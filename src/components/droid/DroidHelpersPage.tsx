@@ -185,8 +185,6 @@ export function DroidHelpersPage() {
     }
   }, [])
 
-
-
   const handleCloudSessionSyncToggle = async (enabled: boolean) => {
     setCloudSessionSync(enabled)
     const result = await commands.saveCloudSessionSync(enabled)
@@ -291,7 +289,6 @@ export function DroidHelpersPage() {
               />
             </div>
           </div>
-
 
           {/* Disable Auto Update Section */}
           <div
@@ -481,7 +478,6 @@ export function DroidHelpersPage() {
           </div>
         </div>
       </div>
-
 
       {/* Disable Auto Update Dialog */}
       <Dialog

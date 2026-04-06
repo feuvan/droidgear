@@ -100,6 +100,22 @@ pub struct MissionModelSettings {
     pub validation_worker_reasoning_effort: Option<String>,
 }
 
+/// Session default settings for mixed models configuration
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionDefaultSettings {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reasoning_effort: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spec_mode_model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub spec_mode_reasoning_effort: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub autonomy_mode: Option<String>,
+}
+
 // ============================================================================
 // Helpers
 // ============================================================================
@@ -786,4 +802,73 @@ pub fn save_mission_model_settings_for_home(
 
 pub fn save_mission_model_settings(settings: MissionModelSettings) -> Result<(), String> {
     save_mission_model_settings_for_home(&system_home_dir()?, settings)
+}
+
+pub fn get_session_default_settings_for_home(
+    home_dir: &Path,
+) -> Result<SessionDefaultSettings, String> {
+    let config = match read_config_file_for_home(home_dir) {
+        ConfigReadResult::Ok(value) => value,
+        ConfigReadResult::NotFound => {
+            return Ok(SessionDefaultSettings {
+                model: None,
+                reasoning_effort: None,
+                spec_mode_model: None,
+                spec_mode_reasoning_effort: None,
+                autonomy_mode: None,
+            });
+        }
+        ConfigReadResult::ParseError(_) => {
+            return Ok(SessionDefaultSettings {
+                model: None,
+                reasoning_effort: None,
+                spec_mode_model: None,
+                spec_mode_reasoning_effort: None,
+                autonomy_mode: None,
+            });
+        }
+    };
+
+    let settings = config
+        .get("sessionDefaultSettings")
+        .and_then(|v| serde_json::from_value(v.clone()).ok())
+        .unwrap_or(SessionDefaultSettings {
+            model: None,
+            reasoning_effort: None,
+            spec_mode_model: None,
+            spec_mode_reasoning_effort: None,
+            autonomy_mode: None,
+        });
+
+    Ok(settings)
+}
+
+pub fn get_session_default_settings() -> Result<SessionDefaultSettings, String> {
+    get_session_default_settings_for_home(&system_home_dir()?)
+}
+
+pub fn save_session_default_settings_for_home(
+    home_dir: &Path,
+    settings: SessionDefaultSettings,
+) -> Result<(), String> {
+    let mut config = match read_config_file_for_home(home_dir) {
+        ConfigReadResult::Ok(value) => value,
+        ConfigReadResult::NotFound => serde_json::json!({}),
+        ConfigReadResult::ParseError(e) => {
+            return Err(format!("{CONFIG_PARSE_ERROR_PREFIX} {e}"));
+        }
+    };
+
+    let settings_value = serde_json::to_value(&settings)
+        .map_err(|e| format!("Failed to serialize session default settings: {e}"))?;
+
+    if let Some(obj) = config.as_object_mut() {
+        obj.insert("sessionDefaultSettings".to_string(), settings_value);
+    }
+
+    write_config_file_for_home(home_dir, &config)
+}
+
+pub fn save_session_default_settings(settings: SessionDefaultSettings) -> Result<(), String> {
+    save_session_default_settings_for_home(&system_home_dir()?, settings)
 }

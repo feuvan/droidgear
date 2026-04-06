@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { commands, type CustomModel } from '@/lib/bindings'
+import {
+  commands,
+  type CustomModel,
+  type SessionDefaultSettings,
+} from '@/lib/bindings'
 
 const CONFIG_PARSE_ERROR_PREFIX = 'CONFIG_PARSE_ERROR:'
 
@@ -13,6 +17,7 @@ interface ModelState {
   error: string | null
   configParseError: string | null
   defaultModelId: string | null
+  sessionDefaultSettings: SessionDefaultSettings | null
 
   // Actions
   loadModels: () => Promise<void>
@@ -27,7 +32,9 @@ interface ModelState {
   setError: (error: string | null) => void
   clearConfigParseError: () => void
   loadDefaultModel: () => Promise<void>
-  setDefaultModel: (index: number) => Promise<void>
+  saveSessionDefaultSettings: (
+    settings: SessionDefaultSettings
+  ) => Promise<void>
 }
 
 function modelsEqual(a: CustomModel[], b: CustomModel[]): boolean {
@@ -88,6 +95,7 @@ export const useModelStore = create<ModelState>()(
       error: null,
       configParseError: null,
       defaultModelId: null,
+      sessionDefaultSettings: null,
 
       loadModels: async () => {
         set({ isLoading: true, error: null }, undefined, 'loadModels/start')
@@ -334,31 +342,47 @@ export const useModelStore = create<ModelState>()(
 
       loadDefaultModel: async () => {
         try {
-          const result = await commands.getDefaultModel()
+          const result = await commands.getSessionDefaultSettings()
           if (result.status === 'ok') {
-            set({ defaultModelId: result.data }, undefined, 'loadDefaultModel')
+            set(
+              {
+                defaultModelId: result.data.model ?? null,
+                sessionDefaultSettings: result.data,
+              },
+              undefined,
+              'loadDefaultModel'
+            )
           }
         } catch {
           // Silently ignore errors when loading default model
         }
       },
 
-      setDefaultModel: async index => {
-        const { models } = get()
-        const model = models[index]
-        if (!model || !model.id) return
-
-        const modelId = model.id
-
+      saveSessionDefaultSettings: async settings => {
         try {
-          const result = await commands.saveDefaultModel(modelId)
+          const result = await commands.saveSessionDefaultSettings(settings)
           if (result.status === 'ok') {
-            set({ defaultModelId: modelId }, undefined, 'setDefaultModel')
+            set(
+              {
+                defaultModelId: settings.model ?? null,
+                sessionDefaultSettings: settings,
+              },
+              undefined,
+              'saveSessionDefaultSettings'
+            )
           } else {
-            set({ error: result.error }, undefined, 'setDefaultModel/error')
+            set(
+              { error: result.error },
+              undefined,
+              'saveSessionDefaultSettings/error'
+            )
           }
         } catch (e) {
-          set({ error: String(e) }, undefined, 'setDefaultModel/exception')
+          set(
+            { error: String(e) },
+            undefined,
+            'saveSessionDefaultSettings/exception'
+          )
         }
       },
     }),

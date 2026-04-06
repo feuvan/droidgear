@@ -30,6 +30,7 @@ interface ModelCardProps {
   selectionMode?: boolean
   isSelected?: boolean
   isDefault?: boolean
+  isSpecMode?: boolean
   onSelect?: (index: number, selected: boolean) => void
   onEdit: () => void
   onDelete: () => void
@@ -44,6 +45,7 @@ export function ModelCard({
   selectionMode = false,
   isSelected = false,
   isDefault = false,
+  isSpecMode = false,
   onSelect,
   onEdit,
   onDelete,
@@ -161,11 +163,22 @@ export function ModelCard({
           <Badge variant="secondary" className={providerColors[model.provider]}>
             {providerLabels[model.provider]}
           </Badge>
-          {isDefault && (
+          {isDefault && isSpecMode ? (
+            <Badge
+              variant="default"
+              className="bg-gradient-to-r from-yellow-500 to-purple-500 text-white border-0"
+            >
+              {t('models.defaultAndSpecMode')}
+            </Badge>
+          ) : isDefault ? (
             <Badge variant="default" className="bg-yellow-500 text-white">
               {t('models.default')}
             </Badge>
-          )}
+          ) : isSpecMode ? (
+            <Badge variant="default" className="bg-purple-500 text-white">
+              {t('models.specMode')}
+            </Badge>
+          ) : null}
           {getStatusIcon()}
         </div>
         <div className="text-sm text-muted-foreground truncate mt-1">
@@ -214,7 +227,7 @@ export function ModelCard({
             </div>
           )
         })()}
-        {isDefault && (
+        {(isDefault || isSpecMode) && (
           <div className="text-xs text-muted-foreground mt-1">
             {t('models.defaultHint')}
           </div>
@@ -247,11 +260,23 @@ export function ModelCard({
             </TooltipContent>
           </Tooltip>
         )}
-        {!isDefault && onSetDefault && (
+        {onSetDefault && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={onSetDefault}>
-                <Star className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onSetDefault}
+                className={
+                  isDefault || isSpecMode
+                    ? 'text-yellow-500 hover:text-yellow-600'
+                    : ''
+                }
+              >
+                <Star
+                  className="h-4 w-4"
+                  fill={isDefault || isSpecMode ? 'currentColor' : 'none'}
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>

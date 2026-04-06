@@ -38,6 +38,8 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         config::save_show_thinking_in_main_view,
         config::get_mission_model_settings,
         config::save_mission_model_settings,
+        config::get_session_default_settings,
+        config::save_session_default_settings,
         channel::load_channels,
         channel::save_channels,
         channel::save_channel_credentials,

@@ -33,6 +33,7 @@ interface ModelListProps {
   selectedIndices?: Set<number>
   onSelect?: (index: number, selected: boolean) => void
   defaultModelId?: string | null
+  specModeModelId?: string | null
 }
 
 export function ModelList({
@@ -45,6 +46,7 @@ export function ModelList({
   selectedIndices = new Set(),
   onSelect,
   defaultModelId,
+  specModeModelId,
 }: ModelListProps) {
   const { t } = useTranslation()
   const { models, reorderModels } = useModelStore()
@@ -107,6 +109,11 @@ export function ModelList({
     return model.id === defaultModelId
   }
 
+  const isModelSpecMode = (model: CustomModel) => {
+    if (!specModeModelId) return false
+    return model.id === specModeModelId
+  }
+
   if (isDragDisabled) {
     return (
       <div className="space-y-2">
@@ -118,6 +125,7 @@ export function ModelList({
             selectionMode={selectionMode}
             isSelected={selectedIndices.has(originalIndex)}
             isDefault={isModelDefault(model)}
+            isSpecMode={isModelSpecMode(model)}
             onSelect={onSelect}
             onEdit={() => onEdit(originalIndex)}
             onDelete={() => onDelete(originalIndex)}
@@ -151,6 +159,7 @@ export function ModelList({
               selectionMode={selectionMode}
               isSelected={selectedIndices.has(originalIndex)}
               isDefault={isModelDefault(model)}
+              isSpecMode={isModelSpecMode(model)}
               onSelect={onSelect}
               onEdit={() => onEdit(originalIndex)}
               onDelete={() => onDelete(originalIndex)}

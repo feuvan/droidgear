@@ -3,7 +3,7 @@
 //! Core logic lives in `droidgear-core`.
 
 pub use droidgear_core::factory_settings::{
-    CustomModel, MissionModelSettings, ModelInfo, Provider,
+    CustomModel, MissionModelSettings, ModelInfo, Provider, SessionDefaultSettings,
 };
 use tauri::AppHandle;
 
@@ -178,4 +178,19 @@ pub async fn get_mission_model_settings() -> Result<MissionModelSettings, String
 #[specta::specta]
 pub async fn save_mission_model_settings(settings: MissionModelSettings) -> Result<(), String> {
     droidgear_core::factory_settings::save_mission_model_settings(settings)
+}
+
+/// Gets the sessionDefaultSettings from settings.json
+/// Returns empty settings if not set
+#[tauri::command]
+#[specta::specta]
+pub async fn get_session_default_settings() -> Result<SessionDefaultSettings, String> {
+    droidgear_core::factory_settings::get_session_default_settings()
+}
+
+/// Saves the sessionDefaultSettings to settings.json
+#[tauri::command]
+#[specta::specta]
+pub async fn save_session_default_settings(settings: SessionDefaultSettings) -> Result<(), String> {
+    droidgear_core::factory_settings::save_session_default_settings(settings)
 }
