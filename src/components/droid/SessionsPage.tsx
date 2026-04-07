@@ -26,6 +26,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from '@/components/ui/resizable'
 import { cn } from '@/lib/utils'
 import {
   commands,
@@ -486,147 +491,153 @@ export function SessionsPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <ResizablePanelGroup direction="horizontal">
         {/* Sessions List */}
-        <div className="w-72 border-r flex flex-col">
-          <ScrollArea className="flex-1">
-            {loading && sessions.length === 0 ? (
-              <div className="flex items-center justify-center p-4 text-muted-foreground">
-                {t('common.loading')}
-              </div>
-            ) : error ? (
-              <div className="p-4 text-destructive text-sm">{error}</div>
-            ) : sessions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-4 text-muted-foreground text-sm">
-                <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
-                <p>{t('droid.sessions.noSessions')}</p>
-              </div>
-            ) : viewMode === 'list' ? (
-              renderListView()
-            ) : (
-              renderGroupedView()
-            )}
-          </ScrollArea>
-        </div>
+        <ResizablePanel defaultSize={25} minSize={15}>
+          <div className="flex flex-col h-full">
+            <ScrollArea className="flex-1">
+              {loading && sessions.length === 0 ? (
+                <div className="flex items-center justify-center p-4 text-muted-foreground">
+                  {t('common.loading')}
+                </div>
+              ) : error ? (
+                <div className="p-4 text-destructive text-sm">{error}</div>
+              ) : sessions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-4 text-muted-foreground text-sm">
+                  <MessageSquare className="h-8 w-8 mb-2 opacity-50" />
+                  <p>{t('droid.sessions.noSessions')}</p>
+                </div>
+              ) : viewMode === 'list' ? (
+                renderListView()
+              ) : (
+                renderGroupedView()
+              )}
+            </ScrollArea>
+          </div>
+        </ResizablePanel>
+
+        <ResizableHandle />
 
         {/* Session Detail */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {detailLoading ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              {t('common.loading')}
-            </div>
-          ) : selectedSession ? (
-            <>
-              <div className="p-4 border-b flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <h2 className="font-medium truncate">
-                    {selectedSession.title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
-                    <span>{formatDate(selectedSession.modifiedAt)}</span>
-                    <span>{selectedSession.model}</span>
-                    <span>
-                      {formatTokens(
-                        selectedSession.tokenUsage.inputTokens +
-                          selectedSession.tokenUsage.outputTokens
-                      )}{' '}
-                      tokens
-                    </span>
-                  </div>
-                  {selectedSession.cwd && (
-                    <div className="text-xs text-muted-foreground mt-1 truncate">
-                      {selectedSession.cwd}
-                    </div>
-                  )}
-                </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant={followMode ? 'default' : 'outline'}
-                      size="icon"
-                      className="h-8 w-8 flex-shrink-0"
-                      onClick={handleFollowToggle}
-                    >
-                      <ArrowDownToLine className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {followMode
-                      ? t('droid.sessions.followModeOn')
-                      : t('droid.sessions.followModeOff')}
-                  </TooltipContent>
-                </Tooltip>
+        <ResizablePanel defaultSize={75} minSize={30}>
+          <div className="flex flex-col h-full min-w-0">
+            {detailLoading ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                {t('common.loading')}
               </div>
-              <ScrollArea ref={contentScrollRef} className="flex-1 min-w-0">
-                <div className="p-4 space-y-4">
-                  {selectedSession.messages.map(message => (
-                    <div
-                      key={message.id}
-                      className={cn(
-                        'flex gap-3',
-                        message.role === 'user'
-                          ? 'justify-end'
-                          : 'justify-start'
-                      )}
-                    >
-                      {message.role === 'assistant' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Bot className="h-4 w-4 text-primary" />
-                        </div>
-                      )}
+            ) : selectedSession ? (
+              <>
+                <div className="p-4 border-b flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-medium truncate">
+                      {selectedSession.title}
+                    </h2>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                      <span>{formatDate(selectedSession.modifiedAt)}</span>
+                      <span>{selectedSession.model}</span>
+                      <span>
+                        {formatTokens(
+                          selectedSession.tokenUsage.inputTokens +
+                            selectedSession.tokenUsage.outputTokens
+                        )}{' '}
+                        tokens
+                      </span>
+                    </div>
+                    {selectedSession.cwd && (
+                      <div className="text-xs text-muted-foreground mt-1 truncate">
+                        {selectedSession.cwd}
+                      </div>
+                    )}
+                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant={followMode ? 'default' : 'outline'}
+                        size="icon"
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={handleFollowToggle}
+                      >
+                        <ArrowDownToLine className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {followMode
+                        ? t('droid.sessions.followModeOn')
+                        : t('droid.sessions.followModeOff')}
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <ScrollArea ref={contentScrollRef} className="flex-1 min-w-0">
+                  <div className="p-4 space-y-4">
+                    {selectedSession.messages.map(message => (
                       <div
+                        key={message.id}
                         className={cn(
-                          'max-w-[80%] rounded-lg p-3',
+                          'flex gap-3',
                           message.role === 'user'
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted'
+                            ? 'justify-end'
+                            : 'justify-start'
                         )}
                       >
-                        {message.content.map((block, idx) => (
-                          <div key={idx} className="select-text">
-                            {block.type === 'thinking' && block.thinking ? (
-                              <details
-                                open={expandThinking}
-                                className="text-xs opacity-70 mb-2"
-                              >
-                                <summary className="cursor-pointer">
-                                  {t('droid.sessions.thinking')}
-                                </summary>
-                                <div className="mt-1 pl-2 border-l-2 border-muted-foreground/30">
-                                  {block.thinking}
-                                </div>
-                              </details>
-                            ) : block.text ? (
-                              message.role === 'user' ? (
-                                <div className="whitespace-pre-wrap text-sm">
-                                  {block.text}
-                                </div>
-                              ) : (
-                                <Streamdown shikiTheme={shikiTheme}>
-                                  {block.text}
-                                </Streamdown>
-                              )
-                            ) : null}
+                        {message.role === 'assistant' && (
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Bot className="h-4 w-4 text-primary" />
                           </div>
-                        ))}
-                      </div>
-                      {message.role === 'user' && (
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                          <User className="h-4 w-4 text-primary-foreground" />
+                        )}
+                        <div
+                          className={cn(
+                            'max-w-[80%] rounded-lg p-3',
+                            message.role === 'user'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-muted'
+                          )}
+                        >
+                          {message.content.map((block, idx) => (
+                            <div key={idx} className="select-text">
+                              {block.type === 'thinking' && block.thinking ? (
+                                <details
+                                  open={expandThinking}
+                                  className="text-xs opacity-70 mb-2"
+                                >
+                                  <summary className="cursor-pointer">
+                                    {t('droid.sessions.thinking')}
+                                  </summary>
+                                  <div className="mt-1 pl-2 border-l-2 border-muted-foreground/30">
+                                    {block.thinking}
+                                  </div>
+                                </details>
+                              ) : block.text ? (
+                                message.role === 'user' ? (
+                                  <div className="whitespace-pre-wrap text-sm">
+                                    {block.text}
+                                  </div>
+                                ) : (
+                                  <Streamdown shikiTheme={shikiTheme}>
+                                    {block.text}
+                                  </Streamdown>
+                                )
+                              ) : null}
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
-              <p>{t('droid.sessions.selectSessionHint')}</p>
-            </div>
-          )}
-        </div>
-      </div>
+                        {message.role === 'user' && (
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                            <User className="h-4 w-4 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                <p>{t('droid.sessions.selectSessionHint')}</p>
+              </div>
+            )}
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   )
 }
