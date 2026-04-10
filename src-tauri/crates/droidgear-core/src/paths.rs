@@ -21,6 +21,8 @@ pub struct ConfigPaths {
     pub codex: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub openclaw: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hermes: Option<String>,
 }
 
 /// Effective path info with default indicator
@@ -41,6 +43,7 @@ pub struct EffectivePaths {
     pub opencode_auth: EffectivePath,
     pub codex: EffectivePath,
     pub openclaw: EffectivePath,
+    pub hermes: EffectivePath,
 }
 
 /// WSL distribution info
@@ -173,6 +176,13 @@ pub fn get_default_paths_for_home(home_dir: &Path) -> Result<EffectivePaths, Str
                 .to_string(),
             is_default: true,
         },
+        hermes: EffectivePath {
+            key: "hermes".to_string(),
+            path: default_hermes_home_for_home(home_dir)?
+                .to_string_lossy()
+                .to_string(),
+            is_default: true,
+        },
     })
 }
 
@@ -184,6 +194,7 @@ pub fn get_effective_paths_for_home(home_dir: &Path) -> Result<EffectivePaths, S
     let opencode_auth_path = get_opencode_auth_dir_for_home(home_dir, &config)?;
     let codex_path = get_codex_home_for_home(home_dir, &config)?;
     let openclaw_path = get_openclaw_home_for_home(home_dir, &config)?;
+    let hermes_path = get_hermes_home_for_home(home_dir, &config)?;
 
     Ok(EffectivePaths {
         factory: EffectivePath {
@@ -211,15 +222,34 @@ pub fn get_effective_paths_for_home(home_dir: &Path) -> Result<EffectivePaths, S
             path: openclaw_path.to_string_lossy().to_string(),
             is_default: config.openclaw.is_none(),
         },
+        hermes: EffectivePath {
+            key: "hermes".to_string(),
+            path: hermes_path.to_string_lossy().to_string(),
+            is_default: config.hermes.is_none(),
+        },
     })
 }
 
 pub fn get_effective_paths() -> Result<EffectivePaths, String> {
-    get_effective_paths_for_home(&get_home_dir()?)
+    let home = get_home_dir()?;
+    let mut paths = get_effective_paths_for_home(&home)?;
+    // On Windows, use WSL-aware default for Hermes when no custom path is set
+    if paths.hermes.is_default {
+        paths.hermes.path = default_hermes_home_with_wsl(&home)?
+            .to_string_lossy()
+            .to_string();
+    }
+    Ok(paths)
 }
 
 pub fn get_default_paths() -> Result<EffectivePaths, String> {
-    get_default_paths_for_home(&get_home_dir()?)
+    let home = get_home_dir()?;
+    let mut paths = get_default_paths_for_home(&home)?;
+    // On Windows, show WSL path as the default for Hermes
+    paths.hermes.path = default_hermes_home_with_wsl(&home)?
+        .to_string_lossy()
+        .to_string();
+    Ok(paths)
 }
 
 pub fn save_config_path(key: &str, path: &str) -> Result<(), String> {
@@ -250,6 +280,7 @@ pub fn save_config_path_for_home(home_dir: &Path, key: &str, path: &str) -> Resu
         "opencodeAuth" => "opencodeAuth",
         "codex" => "codex",
         "openclaw" => "openclaw",
+        "hermes" => "hermes",
         _ => return Err(format!("Unknown config path key: {key}")),
     };
 
@@ -275,6 +306,7 @@ pub fn reset_config_path_for_home(home_dir: &Path, key: &str) -> Result<(), Stri
                     "opencodeAuth" => "opencodeAuth",
                     "codex" => "codex",
                     "openclaw" => "openclaw",
+                    "hermes" => "hermes",
                     _ => return Err(format!("Unknown config path key: {key}")),
                 };
                 paths_obj.remove(storage_key);
@@ -312,6 +344,28 @@ fn default_codex_home_for_home(home_dir: &Path) -> Result<PathBuf, String> {
 
 fn default_openclaw_home_for_home(home_dir: &Path) -> Result<PathBuf, String> {
     Ok(home_dir.join(".openclaw"))
+}
+
+fn default_hermes_home_for_home(home_dir: &Path) -> Result<PathBuf, String> {
+    Ok(home_dir.join(".hermes"))
+}
+
+/// On Windows, try to resolve Hermes default path via WSL since Hermes
+/// doesn't support native Windows. Falls back to the local home directory.
+fn default_hermes_home_with_wsl(home_dir: &Path) -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(wsl_info) = get_wsl_info() {
+            if let Some(distro) = wsl_info.distros.iter().find(|d| d.is_default) {
+                if let Ok(username) = get_wsl_username(&distro.name) {
+                    if let Ok(wsl_path) = build_wsl_path(&distro.name, &username, "hermes") {
+                        return Ok(PathBuf::from(wsl_path));
+                    }
+                }
+            }
+        }
+    }
+    default_hermes_home_for_home(home_dir)
 }
 
 // ============================================================================
@@ -392,6 +446,22 @@ pub fn get_openclaw_home_for_home(
     }
 }
 
+pub fn get_hermes_home() -> Result<PathBuf, String> {
+    let home = get_home_dir()?;
+    let config = load_config_paths_for_home(&home);
+    match &config.hermes {
+        Some(custom) => Ok(PathBuf::from(custom)),
+        None => default_hermes_home_with_wsl(&home),
+    }
+}
+
+pub fn get_hermes_home_for_home(home_dir: &Path, config: &ConfigPaths) -> Result<PathBuf, String> {
+    match &config.hermes {
+        Some(custom) => Ok(PathBuf::from(custom)),
+        None => default_hermes_home_for_home(home_dir),
+    }
+}
+
 // ============================================================================
 // WSL (Windows only)
 // ============================================================================
@@ -466,6 +536,7 @@ pub fn build_wsl_path(distro: &str, username: &str, config_key: &str) -> Result<
         "opencodeAuth" => ".local/share/opencode",
         "codex" => ".codex",
         "openclaw" => ".openclaw",
+        "hermes" => ".hermes",
         _ => return Err(format!("Unknown config key: {config_key}")),
     };
 
