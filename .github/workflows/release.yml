@@ -241,8 +241,6 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
       - name: Generate and upload latest.json
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -251,10 +249,10 @@ jobs:
           TAG="${RELEASE_TAG}"
           VERSION="${TAG#v}"
           REPO="${{ github.repository }}"
+          RELEASE_ID="${{ needs.create-release.outputs.release_id }}"
           BASE_URL="https://github.com/${REPO}/releases/download/${TAG}"
           PUB_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-          # Map: sig file pattern -> platform key
           declare -A PLATFORM_MAP=(
             ["_aarch64.app.tar.gz.sig"]="darwin-aarch64"
             ["_x64.app.tar.gz.sig"]="darwin-x86_64"
@@ -262,26 +260,29 @@ jobs:
             ["_x64-setup.msi.zip.sig"]="windows-x86_64"
           )
 
-          # List all release assets
-          ASSETS=$(gh release view "$TAG" --json assets -q '.assets[].name')
+          ASSETS_JSON=$(gh api "repos/${REPO}/releases/${RELEASE_ID}/assets" --paginate)
 
           PLATFORMS_JSON="{}"
 
           for pattern in "${!PLATFORM_MAP[@]}"; do
             platform="${PLATFORM_MAP[$pattern]}"
-            sig_file=$(echo "$ASSETS" | grep -F "$pattern" | head -1)
 
-            if [ -z "$sig_file" ]; then
-              echo "Warning: no sig file found for pattern $pattern (platform $platform), skipping"
+            sig_entry=$(echo "$ASSETS_JSON" | jq -r \
+              --arg pat "$pattern" \
+              '.[] | select(.name | endswith($pat)) | "\(.id) \(.name)"' | head -1)
+
+            if [ -z "$sig_entry" ]; then
+              echo "Warning: no sig file for pattern $pattern ($platform), skipping"
               continue
             fi
 
-            # The updater artifact is the sig file without .sig extension
+            asset_id=$(echo "$sig_entry" | awk '{print $1}')
+            sig_file=$(echo "$sig_entry" | awk '{print $2}')
             updater_file="${sig_file%.sig}"
 
-            # Download the signature content
-            gh release download "$TAG" --pattern "$sig_file" --dir /tmp/sigs --clobber
-            SIGNATURE=$(cat "/tmp/sigs/$sig_file")
+            gh api "repos/${REPO}/releases/assets/${asset_id}" \
+              -H "Accept: application/octet-stream" > "/tmp/${sig_file}"
+            SIGNATURE=$(cat "/tmp/${sig_file}")
 
             PLATFORMS_JSON=$(echo "$PLATFORMS_JSON" | jq \
               --arg platform "$platform" \
@@ -290,7 +291,6 @@ jobs:
               '. + {($platform): {"url": $url, "signature": $signature}}')
           done
 
-          # Build final latest.json
           jq -n \
             --arg version "$VERSION" \
             --arg pub_date "$PUB_DATE" \
@@ -300,4 +300,11 @@ jobs:
           echo "Generated latest.json:"
           cat latest.json
 
-          gh release upload "$TAG" latest.json --clobber
+          existing_id=$(echo "$ASSETS_JSON" | jq -r '.[] | select(.name == "latest.json") | .id' | head -1)
+          if [ -n "$existing_id" ]; then
+            gh api -X DELETE "repos/${REPO}/releases/assets/${existing_id}"
+          fi
+          gh api "repos/${REPO}/releases/${RELEASE_ID}/assets?name=latest.json" \
+            --method POST \
+            -H "Content-Type: application/json" \
+            --input latest.json
