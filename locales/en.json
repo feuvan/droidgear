@@ -576,6 +576,8 @@
   "models.extraHeaders": "Extra Headers (JSON)",
   "models.extraHeadersHint": "Additional HTTP headers, e.g. {\"X-Custom-Header\": \"value\"}",
   "models.extraHeadersPlaceholder": "{\"X-Custom-Header\": \"value\"}",
+  "models.context1MSupport": "1M Context Support",
+  "models.context1MSupportHint": "Enable 200K-1M context window support by appending the Anthropic-Beta header",
   "models.invalidJson": "Invalid JSON format",
   "models.invalidJsonWithError": "Invalid JSON: {{error}}",
   "models.smartQuotesHint": "Curly quotes detected — JSON requires straight ASCII double quotes (\"). Replace “ ” ‘ ’ with \" or '.",

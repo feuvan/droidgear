@@ -63,6 +63,19 @@ const defaultBaseUrls: Record<Provider, string> = {
   'generic-chat-completion-api': '',
 }
 
+const ANTHROPIC_BETA_1M_VALUE =
+  'claude-code-20250219,context-1m-2025-08-07,interleaved-thinking-2025-05-14,redact-thinking-2026-02-12,context-management-2025-06-27,prompt-caching-scope-2026-01-05,effort-2025-11-24'
+
+function has1MContextHeader(
+  headers: Record<string, unknown> | null | undefined
+): boolean {
+  if (!headers || typeof headers !== 'object') return false
+  return (
+    (headers as Record<string, string>)['Anthropic-Beta'] ===
+    ANTHROPIC_BETA_1M_VALUE
+  )
+}
+
 interface ModelFormProps {
   model?: CustomModel
   mode: 'add' | 'edit' | 'duplicate'
@@ -141,6 +154,9 @@ function ModelForm({
   // can re-fill only when the user hasn't manually overridden the value.
   const [autoFilledMaxTokens, setAutoFilledMaxTokens] = useState(
     !model?.maxOutputTokens
+  )
+  const [context1MSupport, setContext1MSupport] = useState(
+    () => model?.extraHeaders != null && has1MContextHeader(model.extraHeaders)
   )
   const [extraArgs, setExtraArgs] = useState(
     model?.extraArgs ? JSON.stringify(model.extraArgs, null, 2) : ''
@@ -442,10 +458,27 @@ function ModelForm({
       maxOutputTokens: maxTokens ? parseInt(maxTokens) : undefined,
       noImageSupport: noImageSupport || undefined,
       extraArgs: buildExtraArgs(),
-      extraHeaders: parseJsonSafe(extraHeaders) as
-        | Record<string, string>
-        | null
-        | undefined,
+      extraHeaders: (() => {
+        const parsed = parseJsonSafe(extraHeaders) as
+          | Record<string, string>
+          | null
+          | undefined
+        if (provider === 'anthropic' && context1MSupport) {
+          return {
+            ...(parsed ?? {}),
+            'Anthropic-Beta': ANTHROPIC_BETA_1M_VALUE,
+          }
+        }
+        if (
+          provider === 'anthropic' &&
+          !context1MSupport &&
+          parsed?.['Anthropic-Beta'] === ANTHROPIC_BETA_1M_VALUE
+        ) {
+          const { 'Anthropic-Beta': _, ...rest } = parsed
+          return Object.keys(rest).length > 0 ? rest : undefined
+        }
+        return parsed as Record<string, string> | null | undefined
+      })(),
     }
 
     onSave(newModel)
@@ -704,6 +737,26 @@ function ModelForm({
                   {t('models.reasoningEffortHint')}
                 </p>
               </div>
+
+              {provider === 'anthropic' && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="context1MSupport"
+                    checked={context1MSupport}
+                    onCheckedChange={checked =>
+                      setContext1MSupport(checked === true)
+                    }
+                  />
+                  <Label htmlFor="context1MSupport" className="cursor-pointer">
+                    {t('models.context1MSupport')}
+                  </Label>
+                </div>
+              )}
+              {provider === 'anthropic' && context1MSupport && (
+                <p className="text-xs text-muted-foreground -mt-2">
+                  {t('models.context1MSupportHint')}
+                </p>
+              )}
 
               {/* Advanced Options (extraArgs / extraHeaders) */}
               <button

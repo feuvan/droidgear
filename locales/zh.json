@@ -576,6 +576,8 @@
   "models.extraHeaders": "额外请求头 (JSON)",
   "models.extraHeadersHint": "附加的 HTTP 请求头，如 {\"X-Custom-Header\": \"value\"}",
   "models.extraHeadersPlaceholder": "{\"X-Custom-Header\": \"value\"}",
+  "models.context1MSupport": "1M 上下文支持",
+  "models.context1MSupportHint": "启用 200K-1M 上下文窗口支持，自动追加 Anthropic-Beta 请求头",
   "models.invalidJson": "JSON 格式无效",
   "models.invalidJsonWithError": "JSON 格式无效：{{error}}",
   "models.smartQuotesHint": "检测到中文/弯引号 —— JSON 必须使用 ASCII 直引号 (\")，请将 “ ” ‘ ’ 替换为 \" 或 '。",
