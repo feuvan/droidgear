@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.3
+
+**New Features / 新功能**
+
+- Registry-driven reasoning effort whitelist with per-provider encoding / 注册表驱动的推理 effort 白名单，支持按服务商编码
+- Open effort settings to all Anthropic provider models and fix encoding for non-Claude models / 向所有 Anthropic 服务商模型开放 effort 设置，并修复非 Claude 模型的编码
+
 ## v0.6.2
 
 **New Features / 新功能**
