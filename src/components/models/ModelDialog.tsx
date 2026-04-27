@@ -219,14 +219,26 @@ function ModelForm({
       ) {
         parsed.thinking = { type: 'adaptive' }
         parsed.output_config = { effort: nextEffort }
-      } else if (nextProvider === 'anthropic') {
+      } else if (
+        nextProvider === 'anthropic' &&
+        nextModelId.startsWith('claude-')
+      ) {
         parsed.thinking = {
           type: 'enabled',
           budget_tokens: effortToBudgetTokens(nextEffort),
         }
+      } else if (nextProvider === 'anthropic') {
+        parsed.thinking = { type: 'enabled' }
+        parsed.output_config = { effort: nextEffort }
       } else {
         parsed.reasoning = { effort: nextEffort }
       }
+    } else if (
+      nextProvider === 'anthropic' &&
+      !nextModelId.startsWith('claude-') &&
+      nextModelId
+    ) {
+      parsed.thinking = { type: 'disabled' }
     }
     if (isOpus47(nextModelId)) {
       delete parsed.temperature
@@ -425,14 +437,23 @@ function ModelForm({
       ) {
         parsed.thinking = { type: 'adaptive' }
         parsed.output_config = { effort: reasoningEffort }
-      } else if (provider === 'anthropic') {
+      } else if (provider === 'anthropic' && modelId.startsWith('claude-')) {
         parsed.thinking = {
           type: 'enabled',
           budget_tokens: effortToBudgetTokens(reasoningEffort),
         }
+      } else if (provider === 'anthropic') {
+        parsed.thinking = { type: 'enabled' }
+        parsed.output_config = { effort: reasoningEffort }
       } else {
         parsed.reasoning = { effort: reasoningEffort }
       }
+    } else if (
+      provider === 'anthropic' &&
+      !modelId.startsWith('claude-') &&
+      modelId
+    ) {
+      parsed.thinking = { type: 'disabled' }
     }
 
     // Opus 4.7 rejects sampling parameters — strip them rather than 400 at runtime.
@@ -721,12 +742,14 @@ function ModelForm({
                     <SelectItem value="high">
                       {t('models.reasoningEffort.high')}
                     </SelectItem>
-                    {supportsXhighEffort(modelId) && (
+                    {(provider === 'anthropic' ||
+                      supportsXhighEffort(modelId)) && (
                       <SelectItem value="xhigh">
                         {t('models.reasoningEffort.xhigh')}
                       </SelectItem>
                     )}
-                    {supportsMaxEffort(modelId) && (
+                    {(provider === 'anthropic' ||
+                      supportsMaxEffort(modelId)) && (
                       <SelectItem value="max">
                         {t('models.reasoningEffort.max')}
                       </SelectItem>

@@ -46,29 +46,27 @@ export function isAnthropicAdaptiveThinkingModel(modelId: string): boolean {
   )
 }
 
-// Per Anthropic adaptive-thinking docs, `max` effort is available on
-// Opus 4.7, Opus 4.6, Sonnet 4.6, and Mythos.
-// https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking
+// All Anthropic models support effort via either adaptive-thinking
+// (output_config.effort) or budget_tokens (thinking.budget_tokens). Both
+// encodings accept the full range of effort values. Let the user decide.
 export function supportsMaxEffort(modelId: string): boolean {
-  return isAnthropicAdaptiveThinkingModel(modelId)
+  if (!modelId) return true
+  const n = normalizeModelId(modelId)
+  return n.startsWith('claude.')
 }
 
-// Per Anthropic adaptive-thinking docs, `xhigh` effort is available only on
-// Opus 4.7 for the adaptive encoding. Other Anthropic adaptive models
-// (Opus 4.6, Sonnet 4.6) do not accept `xhigh`. For non-Anthropic reasoning
-// models (GPT-5 family, o-series, etc.) we stay permissive since
-// OpenAI-compatible `reasoning.effort` typically accepts it.
+// All Anthropic models can express xhigh-level reasoning — adaptive models
+// use output_config.effort, others map to budget_tokens. Non-Anthropic
+// reasoning models (GPT-5, o-series) also accept it via reasoning.effort.
 export function supportsXhighEffort(modelId: string): boolean {
   if (!modelId) return true
-  if (isOpus47(modelId)) return true
-  if (isAnthropicAdaptiveThinkingModel(modelId)) return false
   const n = normalizeModelId(modelId)
+  if (n.startsWith('claude.')) return true
   return (
     n.startsWith('gpt.5') ||
     n.startsWith('o1') ||
     n.startsWith('o3') ||
-    n.startsWith('o4') ||
-    n.startsWith('claude.')
+    n.startsWith('o4')
   )
 }
 

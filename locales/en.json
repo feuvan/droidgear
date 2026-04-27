@@ -533,6 +533,8 @@
   "models.defaultSettings.reasoningEffort.low": "Low",
   "models.defaultSettings.reasoningEffort.medium": "Medium",
   "models.defaultSettings.reasoningEffort.high": "High",
+  "models.defaultSettings.reasoningEffort.xhigh": "Extra High",
+  "models.defaultSettings.reasoningEffort.max": "Max",
   "models.defaultSettings.currentDefault": "Currently: {{model}}",
   "models.defaultSettings.noSelection": "Please select at least one role",
   "models.deleteModel": "Delete Model",

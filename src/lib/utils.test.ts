@@ -38,35 +38,36 @@ describe('isAnthropicAdaptiveThinkingModel', () => {
 })
 
 describe('supportsMaxEffort', () => {
-  it('applies to all anthropic adaptive thinking models', () => {
+  it('applies to all claude- models', () => {
     expect(supportsMaxEffort('claude-opus-4.7')).toBe(true)
     expect(supportsMaxEffort('claude-opus-4-7')).toBe(true)
     expect(supportsMaxEffort('claude-opus-4.6')).toBe(true)
     expect(supportsMaxEffort('claude-sonnet-4.6')).toBe(true)
+    expect(supportsMaxEffort('claude-opus-4.5')).toBe(true)
+    expect(supportsMaxEffort('claude-sonnet-4.5')).toBe(true)
+    expect(supportsMaxEffort('claude-haiku-4.5')).toBe(true)
   })
 
-  it('does not apply to legacy claude or openai models', () => {
-    expect(supportsMaxEffort('claude-opus-4.5')).toBe(false)
-    expect(supportsMaxEffort('claude-sonnet-4.5')).toBe(false)
+  it('does not apply to openai models', () => {
     expect(supportsMaxEffort('gpt-5.2')).toBe(false)
+    expect(supportsMaxEffort('o3-mini')).toBe(false)
   })
 })
 
 describe('supportsXhighEffort', () => {
-  it('allows xhigh on Opus 4.7 and openai reasoning models', () => {
+  it('allows xhigh on all claude models and openai reasoning models', () => {
     expect(supportsXhighEffort('claude-opus-4.7')).toBe(true)
+    expect(supportsXhighEffort('claude-opus-4.6')).toBe(true)
+    expect(supportsXhighEffort('claude-sonnet-4.6')).toBe(true)
+    expect(supportsXhighEffort('claude-opus-4.5')).toBe(true)
+    expect(supportsXhighEffort('claude-sonnet-4.5')).toBe(true)
+    expect(supportsXhighEffort('claude-haiku-4.5')).toBe(true)
     expect(supportsXhighEffort('gpt-5.2')).toBe(true)
     expect(supportsXhighEffort('o3-mini')).toBe(true)
   })
 
-  it('rejects xhigh on Opus 4.6 and Sonnet 4.6 (adaptive non-4.7)', () => {
-    expect(supportsXhighEffort('claude-opus-4.6')).toBe(false)
-    expect(supportsXhighEffort('claude-sonnet-4.6')).toBe(false)
-  })
-
-  it('allows xhigh on legacy claude models via budget_tokens mapping', () => {
-    expect(supportsXhighEffort('claude-opus-4.5')).toBe(true)
-    expect(supportsXhighEffort('claude-sonnet-4.5')).toBe(true)
+  it('rejects xhigh on non-reasoning non-claude models', () => {
+    expect(supportsXhighEffort('gemini-2.5-pro')).toBe(false)
   })
 
   it('is permissive for unknown/empty IDs', () => {

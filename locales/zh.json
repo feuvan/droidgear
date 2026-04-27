@@ -533,6 +533,8 @@
   "models.defaultSettings.reasoningEffort.low": "低",
   "models.defaultSettings.reasoningEffort.medium": "中",
   "models.defaultSettings.reasoningEffort.high": "高",
+  "models.defaultSettings.reasoningEffort.xhigh": "极高",
+  "models.defaultSettings.reasoningEffort.max": "最大",
   "models.defaultSettings.currentDefault": "当前：{{model}}",
   "models.defaultSettings.noSelection": "请至少选择一个角色",
   "models.deleteModel": "删除模型",
