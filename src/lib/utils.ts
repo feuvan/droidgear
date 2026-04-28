@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { getModelReasoningConfig } from './model-registry'
+import { findModelByIdOrAlias, getModelReasoningConfig } from './model-registry'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -81,6 +81,12 @@ export function getDefaultMaxOutputTokens(
   modelId: string,
   effort?: ReasoningEffort | string | null
 ): number {
+  // Prefer registry values
+  const entry = findModelByIdOrAlias(modelId)
+  if (entry?.maxOutputTokens) {
+    return entry.maxOutputTokens
+  }
+  // Fallback for unknown models
   if (isOpus47(modelId)) {
     if (effort === 'xhigh' || effort === 'max') return 64000
     return 32000
