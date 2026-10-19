@@ -47,6 +47,8 @@ describe('isStrictSamplingModel', () => {
     expect(isStrictSamplingModel('gemini-3.8-flash')).toBe(false)
     expect(isStrictSamplingModel('qwen3.8-max')).toBe(false)
     expect(isStrictSamplingModel('deepseek-v4-flash-vision-exp')).toBe(false)
+    expect(isStrictSamplingModel('deepseek-flash')).toBe(false)
+    expect(isStrictSamplingModel('gemini-4-argon')).toBe(false)
   })
 })
 
@@ -91,6 +93,7 @@ describe('supportsMaxEffort', () => {
   it('applies to registry whitelist models with max effort', () => {
     expect(supportsMaxEffort('deepseek-v4-pro')).toBe(true)
     expect(supportsMaxEffort('deepseek-v4-flash-vision-exp')).toBe(true)
+    expect(supportsMaxEffort('deepseek-flash')).toBe(true)
     expect(supportsMaxEffort('gpt-5.6')).toBe(true)
     expect(supportsMaxEffort('gpt-5.6-luna')).toBe(true)
     expect(supportsMaxEffort('gpt-6-astra')).toBe(true)
@@ -133,6 +136,7 @@ describe('supportsXhighEffort', () => {
     expect(supportsXhighEffort('deepseek-v4-pro')).toBe(false)
     // deepseek-v4-flash-vision-exp whitelist: ["none", "low", "high", "max"] — no xhigh
     expect(supportsXhighEffort('deepseek-v4-flash-vision-exp')).toBe(false)
+    expect(supportsXhighEffort('deepseek-flash')).toBe(false)
     // kimi-k3 whitelist: ["none", "low", "high", "max"] — no xhigh
     expect(supportsXhighEffort('kimi-k3')).toBe(false)
   })
@@ -141,6 +145,7 @@ describe('supportsXhighEffort', () => {
     expect(supportsXhighEffort('gemini-2.5-pro')).toBe(false)
     expect(supportsXhighEffort('grok-4.5')).toBe(false)
     expect(supportsXhighEffort('gemini-3.8-flash')).toBe(false)
+    expect(supportsXhighEffort('gemini-4-argon')).toBe(false)
   })
 
   it('does not grant xhigh to unregistered Claude IDs', () => {
@@ -197,6 +202,8 @@ describe('getDefaultMaxOutputTokens', () => {
     expect(getDefaultMaxOutputTokens('deepseek-v4-flash-vision-exp')).toBe(
       384000
     )
+    expect(getDefaultMaxOutputTokens('deepseek-flash')).toBe(384000)
+    expect(getDefaultMaxOutputTokens('gemini-4-argon')).toBe(65536)
   })
 
   it('falls back to generic rules for unregistered IDs', () => {
