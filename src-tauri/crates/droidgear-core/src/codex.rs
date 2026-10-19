@@ -24,16 +24,17 @@ use crate::{json, paths, storage};
 pub(crate) const OPENAI_API_KEY_FIELD: &str = "OPENAI_API_KEY";
 pub(crate) const EXPERIMENTAL_BEARER_TOKEN_FIELD: &str = "experimental_bearer_token";
 
-/// DeepSeek V4 models that require the Codex model catalog file
+/// DeepSeek models that require the Codex model catalog file
 /// (`model_catalog_json` in config.toml). Content mirrors the official
-/// DeepSeek setup script (codex-deepseek-setup.sh).
-const DEEPSEEK_V4_MODELS: [&str; 2] = ["deepseek-v4-flash", "deepseek-v4-pro"];
+/// DeepSeek setup script (codex-deepseek-setup.sh): `deepseek-flash` is the
+/// current model id and the legacy ids remain accepted by the API.
+const DEEPSEEK_MODELS: [&str; 3] = ["deepseek-flash", "deepseek-v4-flash", "deepseek-v4-pro"];
 
 /// MiMo models that require the Codex model catalog file
 /// (`model_catalog_json` in config.toml).
 const MIMO_MODELS: [&str; 2] = ["mimo-v2.5", "mimo-v2.5-pro"];
 
-/// Model catalog content for the DeepSeek V4 models, extracted verbatim
+/// Model catalog content for the DeepSeek models, extracted verbatim
 /// from the official setup script.
 const DEEPSEEK_MODELS_JSON: &str = include_str!("../res/codex-models.json");
 
@@ -222,7 +223,7 @@ impl ModelCatalog {
 /// and which one.
 pub(crate) fn catalog_for_model(model: &str) -> Option<ModelCatalog> {
     let model = model.trim();
-    if DEEPSEEK_V4_MODELS.contains(&model) {
+    if DEEPSEEK_MODELS.contains(&model) {
         Some(ModelCatalog::DeepSeek)
     } else if MIMO_MODELS.contains(&model) {
         Some(ModelCatalog::Mimo)
@@ -1371,6 +1372,10 @@ mod tests {
     #[test]
     fn catalog_for_model_matches_deepseek_and_mimo_families() {
         assert_eq!(
+            catalog_for_model("deepseek-flash"),
+            Some(ModelCatalog::DeepSeek)
+        );
+        assert_eq!(
             catalog_for_model("deepseek-v4-flash"),
             Some(ModelCatalog::DeepSeek)
         );
@@ -1380,6 +1385,10 @@ mod tests {
         );
         assert_eq!(
             catalog_for_model("  deepseek-v4-flash  "),
+            Some(ModelCatalog::DeepSeek)
+        );
+        assert_eq!(
+            catalog_for_model("  deepseek-flash  "),
             Some(ModelCatalog::DeepSeek)
         );
         assert_eq!(catalog_for_model("mimo-v2.5-pro"), Some(ModelCatalog::Mimo));
@@ -1403,6 +1412,7 @@ mod tests {
             .join("deepseek.json");
         assert!(deepseek_path.exists());
         let content = std::fs::read_to_string(&deepseek_path).unwrap();
+        assert!(content.contains("deepseek-flash"));
         assert!(content.contains("deepseek-v4-flash"));
         assert!(content.contains("deepseek-v4-pro"));
         assert!(!home

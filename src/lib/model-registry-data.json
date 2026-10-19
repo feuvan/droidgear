@@ -390,6 +390,101 @@
     }
   },
   {
+    "id": "deepseek-flash",
+    "name": "DeepSeek V4.1 Flash 1017",
+    "aliases": [],
+    "platform": "openai-completions",
+    "reasoning": true,
+    "input": ["text", "image"],
+    "thinkingLevelMap": {
+      "minimal": "low",
+      "low": "low",
+      "medium": "high",
+      "high": "high",
+      "xhigh": "high",
+      "max": "max"
+    },
+    "contextWindow": 1000000,
+    "maxOutputTokens": 384000,
+    "reasoningConfig": {
+      "efforts": ["none", "low", "high", "max"],
+      "encoding": {
+        "openai": {
+          "none": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "disabled"
+              }
+            }
+          },
+          "low": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "enabled"
+              },
+              "reasoning_effort": "low"
+            }
+          },
+          "high": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "enabled"
+              },
+              "reasoning_effort": "high"
+            }
+          },
+          "max": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "enabled"
+              },
+              "reasoning_effort": "max"
+            }
+          }
+        },
+        "anthropic": {
+          "none": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "disabled"
+              }
+            }
+          },
+          "low": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "enabled"
+              },
+              "output_config": {
+                "effort": "low"
+              }
+            }
+          },
+          "high": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "enabled"
+              },
+              "output_config": {
+                "effort": "high"
+              }
+            }
+          },
+          "max": {
+            "extraArgsFragment": {
+              "thinking": {
+                "type": "enabled"
+              },
+              "output_config": {
+                "effort": "max"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  {
     "id": "deepseek-r1-0528",
     "name": "DeepSeek R1 0528",
     "aliases": [],
@@ -1002,6 +1097,27 @@
   {
     "id": "gemini-3.8-flash",
     "name": "Gemini 3.8 Flash",
+    "aliases": [],
+    "platform": "gemini",
+    "reasoning": true,
+    "input": ["text", "image"],
+    "thinkingLevelMap": {
+      "minimal": null
+    },
+    "contextWindow": 1048576,
+    "maxOutputTokens": 65536,
+    "reasoningConfig": {
+      "efforts": ["none", "low", "medium", "high"],
+      "profiles": {
+        "anthropic": "anthropic-output-config",
+        "openai": "openai-reasoning",
+        "generic-chat-completion-api": "openai-reasoning"
+      }
+    }
+  },
+  {
+    "id": "gemini-4-argon",
+    "name": "Gemini 4 Argon",
     "aliases": [],
     "platform": "gemini",
     "reasoning": true,

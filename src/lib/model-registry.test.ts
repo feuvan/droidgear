@@ -75,6 +75,14 @@ describe('model-registry capability coverage', () => {
     expect(
       findModelByIdOrAlias('gpt-4o-mini')?.thinkingLevelMap
     ).toBeUndefined()
+    expect(findModelByIdOrAlias('deepseek-flash')?.thinkingLevelMap).toEqual({
+      minimal: 'low',
+      low: 'low',
+      medium: 'high',
+      high: 'high',
+      xhigh: 'high',
+      max: 'max',
+    })
   })
 })
 
@@ -121,6 +129,12 @@ describe('getSupportedEfforts', () => {
   })
 
   it('returns deepseek whitelist', () => {
+    expect(getSupportedEfforts('deepseek-flash', 'openai')).toEqual([
+      'none',
+      'low',
+      'high',
+      'max',
+    ])
     expect(getSupportedEfforts('deepseek-v4-pro', 'openai')).toEqual([
       'none',
       'high',
@@ -245,6 +259,28 @@ describe('getEffortEncoding profiles', () => {
     })
   })
 
+  it('encodes deepseek-flash per the official thinking-mode docs', () => {
+    expect(getEffortEncoding('deepseek-flash', 'openai', 'none')).toEqual({
+      thinking: { type: 'disabled' },
+    })
+    expect(getEffortEncoding('deepseek-flash', 'openai', 'low')).toEqual({
+      thinking: { type: 'enabled' },
+      reasoning_effort: 'low',
+    })
+    expect(getEffortEncoding('deepseek-flash', 'openai', 'high')).toEqual({
+      thinking: { type: 'enabled' },
+      reasoning_effort: 'high',
+    })
+    expect(getEffortEncoding('deepseek-flash', 'openai', 'max')).toEqual({
+      thinking: { type: 'enabled' },
+      reasoning_effort: 'max',
+    })
+    expect(getEffortEncoding('deepseek-flash', 'anthropic', 'high')).toEqual({
+      thinking: { type: 'enabled' },
+      output_config: { effort: 'high' },
+    })
+  })
+
   it('encodes deepseek-v4-flash per its supported effort set', () => {
     expect(getEffortEncoding('deepseek-v4-flash', 'openai', 'none')).toEqual({
       thinking: { type: 'disabled' },
@@ -296,7 +332,7 @@ describe('getEffortEncoding profiles', () => {
   })
 })
 
-describe('aliases resolve reasoning config', () => {
+describe('registry resolves model reasoning config', () => {
   it('resolves grok-4-5 alias', () => {
     const entry = findModelByIdOrAlias('grok-4-5')
     expect(entry?.id).toBe('grok-4.5')
@@ -307,6 +343,20 @@ describe('aliases resolve reasoning config', () => {
     const entry = findModelByIdOrAlias('gpt-5.6-luna-pro')
     expect(entry?.id).toBe('gpt-5.6-luna')
     expect(getSupportedEfforts('gpt-5.6-luna-pro', 'openai')).toContain('xhigh')
+  })
+
+  it('registers DeepSeek Flash with the official model entry', () => {
+    const entry = findModelByIdOrAlias('deepseek-flash')
+    expect(entry?.id).toBe('deepseek-flash')
+    expect(entry).toMatchObject({
+      name: 'DeepSeek V4.1 Flash 1017',
+      platform: 'openai-completions',
+      reasoning: true,
+      input: ['text', 'image'],
+      contextWindow: 1000000,
+      maxOutputTokens: 384000,
+    })
+    expect(hasCustomEffortEncoding('deepseek-flash', 'openai')).toBe(true)
   })
 })
 
